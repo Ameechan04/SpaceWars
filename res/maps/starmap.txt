@@ -1,0 +1,32 @@
+Star Alpha 100 150 connectsTo Beta Gamma Hoth
+Star Beta 400 100 connectsTo Alpha Delta
+Star Gamma 120 400 connectsTo Alpha Feta ZeroPoint Echo
+Star Delta 500 300 connectsTo Beta Epsilon Feta Hoth
+Star Epsilon 600 300 connectsTo Delta Helliconia
+Star Feta  250 350 connectsTo Gamma Delta
+Star Hoth 300 220 connectsTo Alpha Delta Helliconia
+Star Helliconia 330 420 connectsTo Hoth Epsilon
+Star ZeroPoint 110 700 connects to Gamma Echo
+Star Echo 190 680 connects to Gamma ZeroPoint Helliconia
+
+Star Nova 700 100 connectsTo Epsilon Vega
+Star Vega 750 180 connectsTo Nova Sirius
+Star Sirius 800 250 connectsTo Vega Solaris
+Star Solaris 820 320 connectsTo Sirius Eden
+Star Eden 800 400 connectsTo Solaris Avalon
+Star Avalon 760 460 connectsTo Eden Lyra
+Star Lyra 720 520 connectsTo Avalon Helliconia
+Star Orion 680 580 connectsTo Lyra
+Star Polaris 650 650 connectsTo Orion
+Star Nebula 600 700 connectsTo Polaris
+Star Andromeda 550 750 connectsTo Nebula
+Star Centauri 500 700 connectsTo Andromeda
+Star Kepler 450 650 connectsTo Centauri
+Star Titan 400 600 connectsTo Kepler
+Star Vulcan 350 550 connectsTo Titan Echo
+Star Edom 710 300 connectsTo Epsilon Solaris
+
+
+Star Zeta 800 700 connectsTo Polaris Avalon
+Star Jamos 820 770 connectsTo Zeta
+
