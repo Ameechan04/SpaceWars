@@ -117,11 +117,11 @@ public class GamePanel extends JPanel implements Runnable {
             satellite = new SmallSatellite(this,alpha,0);
             alpha.satellites.add(satellite);
             addStationaryEntity(satellite);
-//
-//        SmallSatellite enemy = new SmallSatellite(this, Avalon, Avalon.satellites.size());
-//        enemy.faction = Entity.Faction.ENEMY;
-//        Avalon.satellites.add(enemy);
-//        this.addStationaryEntity(enemy);
+
+        SmallSatellite enemy = new SmallSatellite(this, Avalon, Avalon.satellites.size());
+        enemy.faction = Entity.Faction.ENEMY;
+        Avalon.satellites.add(enemy);
+        this.addStationaryEntity(enemy);
 
 
 //        assetSetter.setObject();
@@ -218,6 +218,7 @@ public class GamePanel extends JPanel implements Runnable {
         for (Entity entity : entities) {
             if (entity != null) entity.draw(g2);
             if (entity != null) entity.drawCentrePosition(g2);
+            if (entity != null) entity.drawWorldXY(g2);
         }
 
 

@@ -22,7 +22,7 @@ public class Entity {
     BufferedImage errorImage;
 
 
-    public int worldX, worldY;
+    public int worldX, worldY;  //ONLY for rendering and hit box alignment
     int solidOffsetX;// = worldX;  //Since the images are larger than the ships (whitespace), the offset shows where the image actually starts
     int solidOffsetY;// = worldY;
     public int centreX, centreY;
@@ -49,41 +49,70 @@ public class Entity {
 
 
 
-    public Entity(GamePanel gamePanel, String name, int buildCost, int maxHealth, int damage) {
-        this.gamePanel = gamePanel;
+    public Entity(GamePanel gp, String name, int cost, int hp, int dmg) {
+        this.gamePanel = gp;
         this.name = name;
-        this.centreX = 0;
-        this.centreY = 0;
-        getImage(); // Load ErrorLoading.png by default
-        this.buildCost = buildCost;
-        this.faction = Faction.PLAYER;
-        this.maxHealth = maxHealth;
-        this.damage = damage;
-        defaultCurrentHealth();
 
+        // size of the sprite
+        solidArea = new Rectangle(0, 0, gp.TILE_SIZE, gp.TILE_SIZE);
 
+        // optional: default offsets if sprite has transparent padding
+        this.solidOffsetX = 0;
+        this.solidOffsetY = 0;
+
+        // give centre an initial value (0,0) ➜ sync derived fields
+        setCentrePosition(0, 0);
+
+        // load fallback image once
+        loadFallbackImage();
+
+        // stats
+        buildCost   = cost;
+        maxHealth   = hp;
+        currentHealth = hp;
+        damage      = dmg;
+        faction     = Faction.PLAYER;
     }
 
 
 
-    public void updateCentreFromWorldPosition() {
-        this.centreX = worldX + gamePanel.TILE_SIZE / 2;
-        this.centreY = worldY + gamePanel.TILE_SIZE / 2;
-        this.exactCentreX = centreX;
-        this.exactCentreY = centreY;
-    }
 
 
+//    public void updateCentreFromWorldPosition() {
+//        this.centreX = worldX + gamePanel.TILE_SIZE / 2;
+//        this.centreY = worldY + gamePanel.TILE_SIZE / 2;
+//        this.exactCentreX = centreX;
+//        this.exactCentreY = centreY;
+//    }
+
+
+    /*Only method that sets the position*/
     public void setCentrePosition(double centreX, double centreY) {
         this.exactCentreX = centreX;
         this.exactCentreY = centreY;
-        this.centreX = (int) centreX;
-        this.centreY = (int) centreY;
-        this.worldX = (int) (centreX - (double) solidArea.width / 2);
-        this.worldY = (int) (centreY - (double) solidArea.height / 2);
+
+        // integer centre used for cheap integer maths / debug drawing
+        this.centreX = (int) Math.round(centreX);
+        this.centreY = (int) Math.round(centreY);
+
+//        // derive top‑left for rendering / collision
+//        this.worldX = this.centreX - solidArea.width / 2;
+//        this.worldY = this.centreY - solidArea.height / 2;
+//
+        this.worldX = this.centreX - gamePanel.TILE_SIZE / 2;
+        this.worldY = this.centreY - gamePanel.TILE_SIZE / 2;
+
+
+        // sync hit‑box
         this.solidArea.x = worldX + solidOffsetX;
         this.solidArea.y = worldY + solidOffsetY;
+
+        System.out.printf("centreX=%d, centreY=%d, worldX=%d, worldY=%d, solidArea=(%d,%d,%d,%d)\n",
+                this.centreX, this.centreY, this.worldX, this.worldY,
+                solidArea.x, solidArea.y, solidArea.width, solidArea.height);
+
     }
+
 
 
     /*override*/
@@ -145,11 +174,28 @@ public class Entity {
 
     public void drawCentrePosition(Graphics2D g2) {
 
-        Ellipse2D centreDot = new Ellipse2D.Double(this.centreX, this.centreY, 5, 5);
+        Ellipse2D centreDot = new Ellipse2D.Double(this.exactCentreX, this.exactCentreY, 2, 2);
+        System.out.println(this.exactCentreX + " " + this.exactCentreY);
         g2.setColor(Color.ORANGE);
         g2.fill(centreDot);
         g2.draw(centreDot);
     }
+
+    public void drawWorldXY(Graphics2D g2) {
+
+        Ellipse2D centreDot = new Ellipse2D.Double(this.worldX, this.worldY, 2, 2);
+        g2.setColor(Color.PINK);
+        g2.fill(centreDot);
+        g2.draw(centreDot);
+    }
+
+    public void drawCentreDebug(Graphics2D g2) {
+        g2.setColor(Color.MAGENTA);
+        g2.fillOval((int) Math.round(exactCentreX) - 2,
+                (int) Math.round(exactCentreY) - 2,
+                4, 4);
+    }
+
 
 
 
