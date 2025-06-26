@@ -4,66 +4,86 @@ import entity.Entity;
 import entity.Ship;
 import entity.StationaryEntity;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
 public class CombatManager {
     GamePanel gamePanel;
-    public List<CombatAnimation> animations = new ArrayList<>();
+    CombatGUI combatGUI;
+    public boolean inCombat = false;
+    private boolean combatEnabled = true;
 
+    ArrayList<Entity> playerEntities = new ArrayList<>();
+    ArrayList<Entity> enemyEntities = new ArrayList<>();
+
+    Star star;
     public CombatManager(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
+        this.combatGUI = new CombatGUI(this);
     }
 
     public void dailyCombat() {
         // Get lists of friendly and enemy ships (or entities)
 
-        List<Star> starsP = new ArrayList<>();
-        List<Star> starsE = new ArrayList<>();
+        playerEntities.clear();
+        enemyEntities.clear();
+
+// Map stars to entities at that star
+        HashMap<Star, List<Entity>> starToPlayerEntities = new HashMap<>();
+        HashMap<Star, List<Entity>> starToEnemyEntities = new HashMap<>();
+
         for (Entity e : gamePanel.getPlayerEntities()) {
-            if (e.currentStar != null) starsP.add(e.currentStar);
+            if (e.currentStar != null) {
+                starToPlayerEntities.computeIfAbsent(e.currentStar, k -> new ArrayList<>()).add(e);
+            }
         }
-
-
         for (Entity e : gamePanel.getEnemyEntities()) {
-            if (e.currentStar != null) starsE.add(e.currentStar);
+            if (e.currentStar != null) {
+                starToEnemyEntities.computeIfAbsent(e.currentStar, k -> new ArrayList<>()).add(e);
+            }
         }
+
         Random rand = new Random();
 
-        boolean overlap = false;
         Star matchingStar = null;
-        for (Star sp : starsP) {
-            for (Star se : starsE) {
-                if (sp == se) { // or sp.equals(se) if equals is overridden
-                    System.out.println("match");
-                    matchingStar = sp;
-                    overlap = true;
-                    break;
-                }
+        for (Star star : starToPlayerEntities.keySet()) {
+            if (starToEnemyEntities.containsKey(star)) {
+                matchingStar = star;
+                break;
             }
-            if (overlap) break;
         }
-        if (!overlap) {
+        if (matchingStar == null) {
+            inCombat = false;
             return;
         }
-        List<Entity> playerEntities = new ArrayList<>();
-        List<Entity> enemyEntities = new ArrayList<>();
-        for (Entity e : gamePanel.getPlayerEntities()) {
-            if (e.currentStar != null && e.currentStar == matchingStar) playerEntities.add(e);
-        }
-         for (Entity e : gamePanel.getEnemyEntities()) {
-                    if (e.currentStar != null && e.currentStar == matchingStar) enemyEntities.add(e);
-                }
 
+        star = matchingStar;
+        star.hasCombat = true;
+        inCombat = true;
+
+        playerEntities.addAll(starToPlayerEntities.get(matchingStar));
+        enemyEntities.addAll(starToEnemyEntities.get(matchingStar));
         System.out.println("Combat started");
 
+
+
+
+
+
+
+
+
         // Each friendly ship attacks one enemy ship
+
+
         for (Entity friendly : playerEntities) {
             Entity enemy = enemyEntities.get(rand.nextInt(enemyEntities.size()));
             enemy.takeDamage(friendly.getDamage());
-            animations.add(new CombatAnimation(friendly, enemy));
+            combatGUI.animations.add(new CombatAnimation(friendly, enemy));
             gamePanel.ui.addMessage(friendly.name + " did " + friendly.getDamage() + " damage to " + enemy.name);
             System.out.println(friendly.name + " did " + friendly.getDamage() + " damage to " + enemy.name);
             System.out.println(friendly.name + " HP: " + friendly.getCurrentHealth() + ", DMG: " + friendly.getDamage());
@@ -74,7 +94,7 @@ public class CombatManager {
         for (Entity enemy : enemyEntities) {
             Entity friendly = playerEntities.get(rand.nextInt(playerEntities.size()));
             friendly.takeDamage(enemy.getDamage());
-            animations.add(new CombatAnimation(enemy, friendly));
+            combatGUI.animations.add(new CombatAnimation(enemy, friendly));
             gamePanel.ui.addMessage(enemy.name + " did " + enemy.getDamage() + " damage to " + friendly.name);
             System.out.println(enemy.name + " did " + enemy.getDamage() + " damage to " + friendly.name);
             System.out.println(enemy.name + " HP: " + enemy.getCurrentHealth() + ", DMG: " + enemy.getDamage());
@@ -82,16 +102,21 @@ public class CombatManager {
         }
 
 
-        // Remove dead ships
+//        // Remove dead ships
         removeDeadShips();
         removeDeadStationaryEntities();
+
+        if (combatFinished()) {
+            star.hasCombat = false;
+            System.out.println("combat finished at " + star.name);
+
+        }
     }
 
     private void removeDeadShips() {
         List<Ship> toRemove = new ArrayList<>();
 
         for (Ship s : gamePanel.getShips()) {
-            System.out.println(s.name + s.getCurrentHealth());
             if (s.isDead()) {
                 toRemove.add(s);
             }
@@ -121,34 +146,34 @@ public class CombatManager {
         }
     }
 
-    public void drawCombatAnimations(Graphics2D g2) {
-        g2.setColor(Color.RED); // or another
+    /**
+     * Returns {@code true} if there are either no player or enemy entities left at the star
+     *
+     * @return {@code true} if either playerEntities or enemyEntities are empty
+     */
+    protected boolean combatFinished(){
+            boolean playerAlive = false;
+            boolean enemyAlive = false;
 
-        List<CombatAnimation> toRemove = new ArrayList<>();
+            for (Entity e : playerEntities) {
+                if (!e.isDead()) {
+                    playerAlive = true;
+                    break;
+                }
+            }
 
-        for (CombatAnimation anim : this.animations) {
-            System.out.println("drawing animation");
-            Rectangle a = anim.attacker.solidArea;
-            Rectangle b = anim.target.solidArea;
+            for (Entity e : enemyEntities) {
+                if (!e.isDead()) {
+                    enemyAlive = true;
+                    break;
+                }
+            }
 
-//            int x1 = anim.attacker.worldX + a.x + a.width / 2;
-//            int y1 = anim.attacker.worldY + a.y + a.height / 2;
-//            int x2 = anim.target.worldX + b.x + b.width / 2;
-//            int y2 = anim.target.worldY + b.y + b.height / 2;
-
-            int x1 = anim.attacker.centreX;
-            int y1 = anim.attacker.centreY;
-            int x2 = anim.target.centreX;
-            int y2 = anim.target.centreY;
-
-            g2.drawLine(x1, y1, x2, y2);
-            System.out.println("drawing between " + x1 + ", " + y1 + " and " + x2 + ", " + y2);
-
-            if (anim.isExpired()) toRemove.add(anim);
-        }
-
-        this.animations.removeAll(toRemove);
+            return !(playerAlive && enemyAlive); // If either side is dead
     }
+
+
+
 
 
 }

@@ -11,7 +11,6 @@ import java.io.IOException;
 
 public abstract class StationaryEntity extends Entity {
     public boolean hasVisibleOrbit = false;
-    boolean debug = true;
 
 
     public StationaryEntity(GamePanel gamePanel, String name,Star currentStar, boolean hasVisibleOrbit, int buildCost, int maxHealth, int damage) {
@@ -21,31 +20,30 @@ public abstract class StationaryEntity extends Entity {
         orbitOffsetY = +10;
         this.hasVisibleOrbit = hasVisibleOrbit;
 
+        if (currentStar != null) {
+            setCentrePosition(currentStar.x + orbitOffsetX, currentStar.y + orbitOffsetY);
+        }
+
+        // Load fallback image
+        getImage();
     }
 
 
+
+
+
     public void draw(Graphics2D g2) {
-        BufferedImage image = null;
-        if (facingLeft) {
-            image = left1;
-        } else {
-            image = right1;
-        }
+
+        //new :
+        BufferedImage image = facingLeft ? left1 : right1;
 
 
-        solidArea.x = worldX;
-        solidArea.y = worldY;
-        //for debugging collisions:
-        g2.setColor(Color.MAGENTA);
-        g2.drawRect(solidArea.x,  solidArea.y, solidArea.width, solidArea.height);
-
-
-
-        g2.drawImage(image, worldX - solidOffsetX, worldY - solidOffsetY, gamePanel.TILE_SIZE, gamePanel.TILE_SIZE, null);
         if (debug) {
-            debug = false;
-            print_debug();
+            g2.setColor(Color.YELLOW);
+            g2.draw(new Rectangle(worldX, worldY, gamePanel.TILE_SIZE, gamePanel.TILE_SIZE));
         }
+
+        g2.drawImage(image, worldX, worldY, gamePanel.TILE_SIZE, gamePanel.TILE_SIZE, null);
 
     }
 

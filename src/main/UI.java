@@ -1,4 +1,5 @@
 package main;
+import entity.Scout;
 import entity.SmallSatellite;
 
 import javax.imageio.ImageIO;
@@ -32,6 +33,9 @@ public class UI {
     private static final Color STATION_FRAME_COLOUR = new Color(170, 18, 18);
     private final int SCREEN_WIDTH;
     private final int SCREEN_HEIGHT;
+
+
+    public int menuNum = 0;
 
 
 //    public boolean messageOn = false;
@@ -75,22 +79,93 @@ public class UI {
 
     public void draw(Graphics2D graphics2D) {
         setFontMetrics(graphics2D);
-        drawDate(graphics2D);
-        drawMoney(graphics2D);
-        if (starIsSelected && this.star != null) {
-            drawStarPanel(graphics2D,star);
-            drawColonisationProgress(graphics2D, star);
-            drawBuildOptions(graphics2D);
-        }
+        if (gamePanel.gameState == gamePanel.titleState) {
+            drawTitleScreen(graphics2D);
+        } else {
 
-        for (Star star : gamePanel.starMap.getStars()) {
-            if (star.colonised == Star.Colonised.BEGUN) {
-                drawColonisationBarBelowStar(graphics2D, star);
+
+            drawDate(graphics2D);
+            drawMoney(graphics2D);
+            if (starIsSelected && this.star != null) {
+                drawStarPanel(graphics2D, star);
+                drawColonisationProgress(graphics2D, star);
+                drawBuildOptions(graphics2D);
             }
-        }
-        //TOP LEFT TEMPORARY MESSAGE
-        drawMessages(graphics2D);
 
+            for (Star star : gamePanel.starMap.getStars()) {
+                if (star.colonised == Star.Colonised.BEGUN) {
+                    drawColonisationBarBelowStar(graphics2D, star);
+                }
+            }
+            //TOP LEFT TEMPORARY MESSAGE
+            drawMessages(graphics2D);
+
+        }
+    }
+
+    private void drawTitleScreen(Graphics2D g2) {
+        //title
+        g2.setFont(arial_80B);
+        String text = "SpaceWars!";
+        FontMetrics fm = g2.getFontMetrics();
+
+
+        int textWidth = fm.stringWidth(text);
+        int x = SCREEN_WIDTH / 2 - textWidth / 2;
+        int y = gamePanel.TILE_SIZE * 2;
+
+        //shadow
+        g2.setColor(Color.MAGENTA);
+        g2.drawString(text, x + 3,y + 5);
+
+        //title text
+        g2.setColor(Color.WHITE);
+        g2.drawString(text, x, y);
+
+
+        //scout image
+
+        x = SCREEN_WIDTH / 2;
+        int imageY = gamePanel.TILE_SIZE / 2;
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(getClass().getResourceAsStream("/units/ScoutShipLeft.png"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (image != null)
+            g2.drawImage(image, x - (36 * 8), imageY, gamePanel.TILE_SIZE * 12, gamePanel.TILE_SIZE * 12, null);
+
+        //MENU
+
+        g2.setFont(arial_24B);
+        fm = g2.getFontMetrics();
+        text = "New Game";
+         textWidth = fm.stringWidth(text);
+         x = SCREEN_WIDTH / 2 - textWidth / 2;
+         y += gamePanel.TILE_SIZE * 8;
+        g2.drawString(text, x, y);
+        if (menuNum == 0) {
+            g2.drawString(">", x - (gamePanel.TILE_SIZE / 2), y);
+        }
+
+         text = "Load Game";
+         textWidth = fm.stringWidth(text);
+         x = SCREEN_WIDTH / 2 - textWidth / 2;
+         y += gamePanel.TILE_SIZE * 2;
+        g2.drawString(text, x, y);
+        if (menuNum == 1) {
+            g2.drawString(">", x - (gamePanel.TILE_SIZE / 2), y);
+        }
+         text = "Quit";
+         textWidth = fm.stringWidth(text);
+         x = SCREEN_WIDTH / 2 - textWidth / 2;
+         y += gamePanel.TILE_SIZE * 2;
+        g2.drawString(text, x, y);
+        if (menuNum == 2) {
+            g2.drawString(">", x - (gamePanel.TILE_SIZE / 2), y);
+        }
 
     }
 

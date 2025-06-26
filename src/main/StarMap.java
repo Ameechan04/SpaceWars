@@ -1,6 +1,7 @@
 package main;
 
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Files;
@@ -14,6 +15,13 @@ public class StarMap {
     public HashSet<Star> colonisedStars = new HashSet<>();
 
     public boolean overlayDrawn = false;
+
+    //for flashing animation:
+    private float flashRadius = 10;
+    private float flashDelta = 0.5f;
+    private final int FLASH_MIN = 8;
+    private final int FLASH_MAX = 18;
+
 
     public StarMap(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
@@ -69,7 +77,7 @@ public void loadFromFile(String filename) throws IOException {
 
 
                 // Draw connections (edges)
-                g2.setColor(Color.GRAY);
+                g2.setColor(new Color(255, 255, 255));
                 for (Star star : this.getStars()) {
                     for (Star connected : star.connections) {
                         g2.drawLine((int) star.x, (int) star.y, (int) connected.x, (int) connected.y);
@@ -80,6 +88,8 @@ public void loadFromFile(String filename) throws IOException {
 
                 // Draw stars (nodes)
                 for (Star star : this.getStars()) {
+
+
 
 
                     if (visitedSnapshot.contains(star)) {
@@ -102,8 +112,21 @@ public void loadFromFile(String filename) throws IOException {
 
 
                         }
+
+
+                        if (star.hasCombat) {
+                            star.combatVisible = true;
+                            int circleX = (int) (star.x + 30 - flashRadius);
+                            int circleY = (int) (star.y + 30 - flashRadius);
+
+                            float diameter = flashRadius * 2;
+                            g2.setColor(Color.RED);
+                            g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
+
+
+                        }
                     } else {
-                        g2.setColor(Color.DARK_GRAY);
+                        g2.setColor(new Color(133, 121, 121));
                     }
 
                     if (this.colonisedStars.contains(star)) {
@@ -115,7 +138,7 @@ public void loadFromFile(String filename) throws IOException {
                                 g2.setColor(new Color(79, 118, 214));
                                 break;
                             case COLONISED:
-                                g2.setColor(new Color(22, 64, 172));
+                                g2.setColor(gamePanel.blueColour);
                                 break;
                             case ABANDONED:
                                 g2.setColor(new Color(42, 42, 62));
@@ -126,13 +149,23 @@ public void loadFromFile(String filename) throws IOException {
                     int ovalDiameter = 20;
                     float planetScale = (float) ovalDiameter / 32;
                     g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-
+                    String str;
                     if (gamePanel.visitedStars.contains(star)) {
-                        g2.setColor(Color.BLUE);
+
+
+                        if (star.colonised.equals(Star.Colonised.COLONISED)) {
+                            g2.setColor(Color.GREEN);
+                        } else {
+                            g2.setColor(Color.white);
+
+                        }
+                        str = star.name;
+
                     } else {
-                        g2.setColor(Color.DARK_GRAY);
+                        g2.setColor(Color.gray);
+                        str = "???";
                     }
-                    g2.drawString(star.name, (int) star.x + 8, (int) star.y);
+                    g2.drawString(str, (int) star.x + 15, (int) star.y);
 
                     if (star.selected) {
                         g2.setStroke(new BasicStroke(3));
@@ -222,5 +255,13 @@ public void loadFromFile(String filename) throws IOException {
             star.overlay = overlays[star.overlayIndex];
         }
     }
+
+    public void updateFlashingCircle() {
+        flashRadius += flashDelta;
+        if (flashRadius >= FLASH_MAX || flashRadius <= FLASH_MIN) {
+            flashDelta *= -1;
+        }
+    }
+
 
 }

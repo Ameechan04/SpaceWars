@@ -11,6 +11,7 @@ import java.io.IOException;
 
 public class Entity {
 
+    public boolean debug = false;
 
     public enum Faction { PLAYER, ENEMY }
 
@@ -27,7 +28,7 @@ public class Entity {
     int solidOffsetY;// = worldY;
     public int centreX, centreY;
     public int speed, solidAreaDefaultX, solidAreaDefaultY;
-    BufferedImage left1, right1;
+    public BufferedImage left1, right1;
 
     public String direction;
 
@@ -107,9 +108,9 @@ public class Entity {
         this.solidArea.x = worldX + solidOffsetX;
         this.solidArea.y = worldY + solidOffsetY;
 
-        System.out.printf("centreX=%d, centreY=%d, worldX=%d, worldY=%d, solidArea=(%d,%d,%d,%d)\n",
-                this.centreX, this.centreY, this.worldX, this.worldY,
-                solidArea.x, solidArea.y, solidArea.width, solidArea.height);
+//        System.out.printf("centreX=%d, centreY=%d, worldX=%d, worldY=%d, solidArea=(%d,%d,%d,%d)\n",
+//                this.centreX, this.centreY, this.worldX, this.worldY,
+//                solidArea.x, solidArea.y, solidArea.width, solidArea.height);
 
     }
 
@@ -175,7 +176,6 @@ public class Entity {
     public void drawCentrePosition(Graphics2D g2) {
 
         Ellipse2D centreDot = new Ellipse2D.Double(this.exactCentreX, this.exactCentreY, 2, 2);
-        System.out.println(this.exactCentreX + " " + this.exactCentreY);
         g2.setColor(Color.ORANGE);
         g2.fill(centreDot);
         g2.draw(centreDot);

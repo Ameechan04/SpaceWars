@@ -1,19 +1,20 @@
 package main;
 
-import entity.Ship;
-import entity.Station;
-import entity.StationaryEntity;
+import entity.*;
 
 import java.awt.*;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class Star {
+    public boolean combatVisible;
+    public Ellipse2D combatButton;
 
-
-
+    public enum Faction { PLAYER, ENEMY }
+    public Faction faction;
 
     public String name;
     public float x, y;
@@ -25,11 +26,13 @@ public class Star {
     public Station station = null;
     double colonisationTimer = 0;
     double colonisationStartDate = -1;
+    int owner = -1;
     public ArrayList<StationaryEntity> satellites = new ArrayList<>();
     public long population = 0;
+    public boolean hasCombat = false;
 
     public void updateColonisation(GameClock gameClock, UI ui) {
-        if (this.colonised == Star.Colonised.BEGUN) {
+        if (this.colonised == Colonised.BEGUN) {
 //            System.out.println("total game days passed: " + gameClock.getTotalGameDays());
 //            System.out.println("total colonised days passed: " + (gameClock.getTotalGameDays() - this.colonisationStartDate));
 
@@ -39,11 +42,20 @@ public class Star {
 
 //                if (star.colonisationTimer >= 7.0) {
             if (gameClock.getTotalGameDays() - this.colonisationStartDate >= 180 ) {
-                this.colonised = Star.Colonised.COLONISED;
+                this.colonised = Colonised.COLONISED;
                 this.population = 200_000;
                 ui.addMessage("Colonisation of " + this.name + " complete.", "green");
+                owner = 1;
             }
         }
+    }
+
+
+    public void updateCombatButton() {
+        if (hasCombat && combatVisible) {
+            combatButton = new Ellipse2D.Double(this.x + 2, this.y + 2, 40, 40);
+        }
+
     }
 
 
@@ -158,6 +170,10 @@ public class Star {
 
         return income;
     }
+
+
+
+
 
 
 

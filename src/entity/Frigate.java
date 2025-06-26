@@ -9,18 +9,17 @@ import java.io.IOException;
 
 public class Frigate extends Ship{
     public Frigate(GamePanel gamePanel, Star currentStar) {
-        super(gamePanel, "Frigate", currentStar, 1.2, 10, 10, gamePanel.buildCosts.get("Frigate"), 150,15);
+        super(gamePanel, "Frigate", currentStar, 1.5, 25, 25, gamePanel.buildCosts.get("Frigate"), 120, 10);
 
-        this.solidOffsetX = 15;
+        this.solidOffsetX = 10;
         this.solidOffsetY = 15;
-        solidArea = new Rectangle(worldX + solidOffsetX , worldY + solidOffsetY, gamePanel.TILE_SIZE / 2 , gamePanel.TILE_SIZE/2);
-        solidAreaDefaultX = worldX;
-        solidAreaDefaultY = worldY;
-        setCentrePosition(currentStar.x, currentStar.y);
+
+        setupSolidArea(gamePanel.TILE_SIZE / 2, gamePanel.TILE_SIZE / 3);
+
+        setCentrePosition(currentStar.x , currentStar.y );
 
         getShipImage();
     }
-
 
     public void getShipImage() {
 

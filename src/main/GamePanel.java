@@ -32,13 +32,19 @@ public class GamePanel extends JPanel implements Runnable {
     int FPS = 60;
 
 //    TileManager tileManager = new TileManager(this);
-        KeyHandler keyHandler = new KeyHandler();
+        KeyHandler keyHandler = new KeyHandler(this);
         MouseHandler mouseHandler = new MouseHandler(this);
 //    Sound sound = new Sound();
 
 //    public CollisionChecker collisionChecker = new CollisionChecker(this);
 //    public AssetSetter assetSetter = new AssetSetter(this);
     Thread gameThread;
+    public int gameState;
+    public final int titleState = 0;
+    public final int playState = 1;
+    public final int pauseState = 2;
+    public final int dialogueState = 3;
+
 
     public BufferedImage[] starOverlays = new BufferedImage[5];
 
@@ -47,6 +53,7 @@ public class GamePanel extends JPanel implements Runnable {
     public ColonyShip colonyShip, colonyShip2;
     public SmallSatellite satellite;
     public BasicShipyard basicShipyard;
+    public Ship e1, e2, e3;
 
     public HashMap<String, Integer> buildCosts = new HashMap<>();
     public int money = 200;
@@ -56,12 +63,19 @@ public class GamePanel extends JPanel implements Runnable {
     public GameClock gameClock = new GameClock();
     public CombatManager combatManager = new CombatManager(this);
 
+
+
+
+
+
+
 //    public SuperObject[] obj = new SuperObject[10]; //TODO as many objects displayed at once as we want -  prepared 10 objects but can be replaced
+Color blueColour = new Color(51, 63, 220);
 
     public GamePanel() {
 
 //        this.setPreferredSize(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
-        this.setBackground(new Color(179, 177, 163));
+        this.setBackground(new Color(0, 0, 0));
         this.setDoubleBuffered(true);
         this.addKeyListener(keyHandler);
         this.addMouseListener(mouseHandler);
@@ -69,9 +83,13 @@ public class GamePanel extends JPanel implements Runnable {
         this.setFocusable(true);
         requestFocusInWindow();
 
+
+
+
     }
 
     public void setUpGame() {
+        gameState = titleState;
        buildCosts.put("Scout",120);
        buildCosts.put("Frigate",200);
        buildCosts.put("Colony Ship",500);
@@ -111,8 +129,21 @@ public class GamePanel extends JPanel implements Runnable {
 //
 //
 //
-//            basicShipyard = new BasicShipyard(this, alpha);
-//            addStationaryEntity(basicShipyard);
+
+        e1 = new Frigate(this, alpha);
+        e1.enterOrbit(alpha);
+        addShip(e1);
+
+        for (int i = 0; i < 10; i++) {
+            e2 = new Frigate(this, alpha);
+            e2.faction = Entity.Faction.PLAYER;
+            e2.enterOrbit(alpha);
+
+            this.addShip(e2);
+        }
+
+            basicShipyard = new BasicShipyard(this, alpha);
+            addStationaryEntity(basicShipyard);
 //
             satellite = new SmallSatellite(this,alpha,0);
             alpha.satellites.add(satellite);
@@ -122,6 +153,14 @@ public class GamePanel extends JPanel implements Runnable {
         enemy.faction = Entity.Faction.ENEMY;
         Avalon.satellites.add(enemy);
         this.addStationaryEntity(enemy);
+
+        for (int i = 0; i < 1; i++) {
+            enemy = new SmallSatellite(this, Avalon, Avalon.satellites.size());
+            enemy.faction = Entity.Faction.ENEMY;
+            Avalon.satellites.add(enemy);
+            this.addStationaryEntity(enemy);
+        }
+
 
 
 //        assetSetter.setObject();
@@ -172,6 +211,11 @@ public class GamePanel extends JPanel implements Runnable {
         lastUpdateTime = currentTime;
         gameClock.updateTime(elapsedTime);
 
+        double currentGameDay = gameClock.getTotalGameDays();
+
+        starMap.updateFlashingCircle();
+
+
         shipBuilderHelper.update();
 
         if (gameClock.isNewMonth()) {
@@ -192,9 +236,16 @@ public class GamePanel extends JPanel implements Runnable {
 
 
            star.updateColonisation(gameClock, ui);
+           star.updateCombatButton();
         }
        for (Entity entity : entities) {
+           if (entity instanceof Ship) {
+               Ship ship = (Ship) entity;
+               if (ship != null) ship.update(currentGameDay);
+           } else {
                if (entity != null) entity.update();
+           }
+
        }
 
        ui.updateMessages(elapsedTime);
@@ -206,29 +257,40 @@ public class GamePanel extends JPanel implements Runnable {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
 
+        if (gameState == titleState) {
+            ui.draw(g2);
+        } else {
+
 
             starMap.draw(g2);
 
-        for (StationaryEntity e : stationaryEntities) {
-            if (e.hasVisibleOrbit) {
-                e.drawOrbit(g2);
+            for (StationaryEntity e : stationaryEntities) {
+                if (e.hasVisibleOrbit) {
+                    e.drawOrbit(g2);
+                }
             }
+
+            for (Entity entity : new ArrayList<>(entities)) {
+
+
+                if (entity != null) {
+                    entity.draw(g2);
+                    if (entity.debug) {
+                        entity.drawCentrePosition(g2);
+                        entity.drawWorldXY(g2);
+                    }
+                }
+
+
+//
+            }
+
+            ui.draw(g2);
+
+
+            combatManager.combatGUI.draw(g2);
+//            combatManager.combatGUI.drawCombatAnimations(g2);
         }
-
-        for (Entity entity : entities) {
-            if (entity != null) entity.draw(g2);
-            if (entity != null) entity.drawCentrePosition(g2);
-            if (entity != null) entity.drawWorldXY(g2);
-        }
-
-
-//        //to test it
-//        for (Ship ship : ships) {
-//            if (ship != null) ship.draw(g2);
-//            System.out.println("ship: " + ship.name);
-//        }
-        ui.draw(g2);
-        combatManager.drawCombatAnimations(g2);
         g2.dispose();
     }
 

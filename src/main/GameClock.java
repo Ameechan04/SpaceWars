@@ -9,11 +9,12 @@ public class GameClock {
     StarMap starMap;
     private double elapsedGameDaysThisFrame = 0;
     private double totalGameDays = 0;
+    public int gameSpeed = 1; //speed is 1 on default
 
 
     // In GamePanel.update()
     public void updateTime(double elapsedRealSeconds) {
-        dayCounter += elapsedRealSeconds * 5; // 5 in-game days per real second
+        dayCounter += elapsedRealSeconds * 5 * gameSpeed; // 5 in-game days per real second
 
         if (dayCounter >= 1.0) {
             int daysToAdvance = (int) dayCounter;
@@ -22,6 +23,10 @@ public class GameClock {
             }
             dayCounter -= daysToAdvance;
         }
+    }
+
+    public void setGameSpeed(int gameSpeed) {
+        this.gameSpeed = gameSpeed;
     }
 
     public void advanceOneDay() {
