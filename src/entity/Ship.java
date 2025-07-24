@@ -110,6 +110,16 @@ public class Ship extends Entity {
             currentStar = targetStar;
             double time = System.nanoTime();
             System.out.println("arrived at " + currentStar.name + " at " + time);
+
+
+            //if there is currently no combat at the star then you are the first and defending
+            if (currentStar.orbitController == null || currentStar.orbitController == this.faction) {
+                currentStar.orbitController = this.getFaction(); // First arrival
+                this.defending = true;
+            } else {
+                this.defending = false; // Not the first faction
+            }
+
             if (!gamePanel.visitedStars.contains(currentStar)) {
                     gamePanel.visitedStars.add(currentStar);
 
@@ -226,7 +236,11 @@ public class Ship extends Entity {
     public void draw(Graphics2D g2) {
         BufferedImage image = facingLeft ? left1 : right1;
 
-        g2.setColor(Color.RED);
+        if (this.faction.equals(Faction.PLAYER))
+            g2.setColor(Color.GREEN);
+        else
+            g2.setColor(Color.RED);
+
         g2.drawRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
 
         if (selected) {

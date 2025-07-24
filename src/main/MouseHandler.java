@@ -1,5 +1,6 @@
 package main;
 
+import entity.Entity;
 import entity.Ship;
 
 import java.awt.*;
@@ -95,7 +96,7 @@ public class MouseHandler extends MouseAdapter {
         }
 
         for (Ship ship : gamePanel.getShips()) {
-            if (ship != null) {
+            if (ship != null && ship.faction.equals(Entity.Faction.PLAYER)) {
                 int entityLeft = ship.solidArea.x;
                 int entityTop = ship.solidArea.y;
                 int entityRight = entityLeft + ship.solidArea.width;
@@ -143,34 +144,7 @@ public class MouseHandler extends MouseAdapter {
                 gamePanel.ui.starIsSelected = true;
                 gamePanel.ui.selectedMessageOn = true;
 
-
-
-                /*
-                if (e.getClickCount() == 2 && selectedShips.size() == 1) {
-                    Ship ship = selectedShips.getFirst();
-                    System.out.println("test 2");
-                    if (ship.name.equalsIgnoreCase("Colony Ship") && ship.currentStar == selectedStar) {
-                        System.out.println("TEST 1; SELECTED COLONY SHIP AND GOT CURRENT STAR AS SELECTED STAR");
-
-                        if (selectedStar.quality == Star.Quality.UNINHABITABLE) {
-                            gamePanel.ui.addMessage("Cannot colonise " + selectedStar.name + ", the system is uninhabitable");
-                        } else if (selectedStar.colonised == Star.Colonised.COLONISED) {
-                            gamePanel.ui.addMessage("Cannot colonise " + selectedStar.name + ", the system is already colonised");
-                        } else {
-                            selectedStar.colonised = Star.Colonised.BEGUN;
-                            gamePanel.starMap.colonisedStars.add(selectedStar);
-                            gamePanel.removeShip(ship);
-                            gamePanel.ui.addMessage("Colonisation begun on " + selectedStar.name);
-                        }
-                        selectedShips.clear();
-                        selectedStar.selected = false;
-                        selectedStar = null;
-                        gamePanel.repaint();
-                        return;
-                    }
-                }
-
-                 */
+                //todo prevent player from building on enemy stars
 
                 if (!selectedShips.isEmpty()) {
                     double delayIncrement = 0.2; // 0.1 game days between each ship
@@ -210,7 +184,13 @@ public class MouseHandler extends MouseAdapter {
         if (gamePanel.visitedStars.contains(star) && star.combatButton != null) {
             if (star.combatButton.contains(mouseX, mouseY)) {
                 System.out.println("Viewing combat at star: " + star.name); //todo remove
-                gamePanel.combatManager.combatGUI.show();
+                for (CombatManager combatManager : gamePanel.activeCombats) {
+                    if (combatManager.star.name.equals(star.name)) {
+                        combatManager.combatGUI.show();
+                    }
+                    return;
+                }
+
 
             }
 
@@ -272,14 +252,20 @@ public class MouseHandler extends MouseAdapter {
 
 
     public void combatManagerClicks(int mouseX, int mouseY) {
-        if (gamePanel.combatManager.inCombat) {
-            RoundRectangle2D closeButton = gamePanel.combatManager.combatGUI.closeButton;
-            if (mouseX >= closeButton.getX() && mouseX <= closeButton.getX() + closeButton.getWidth() &&
-                    mouseY >= closeButton.getY() && mouseY <= closeButton.getY() + closeButton.getHeight()) {
-                System.out.println("closing combat panel");
-                gamePanel.combatManager.combatGUI.hide();
-            }
+        for (CombatManager combatManager : gamePanel.activeCombats) {
 
+
+            if (combatManager.inCombat || combatManager.combatRecently) {
+                RoundRectangle2D closeButton = combatManager.combatGUI.closeButton;
+
+                if (closeButton.contains(mouseX, mouseY)) {
+                    System.out.println("closing combat panel");
+                    combatManager.combatGUI.hide();
+                    combatManager.combatGUI.viewingResult = false;
+
+                }
+
+            }
         }
 
     }

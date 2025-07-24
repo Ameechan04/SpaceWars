@@ -20,6 +20,7 @@ public abstract class StationaryEntity extends Entity {
         orbitOffsetY = +10;
         this.hasVisibleOrbit = hasVisibleOrbit;
 
+        defending = true; //stationary entities are always defending
         if (currentStar != null) {
             setCentrePosition(currentStar.x + orbitOffsetX, currentStar.y + orbitOffsetY);
         }

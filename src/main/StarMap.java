@@ -78,9 +78,27 @@ public void loadFromFile(String filename) throws IOException {
 
                 // Draw connections (edges)
                 g2.setColor(new Color(255, 255, 255));
+
+
+
+
+
                 for (Star star : this.getStars()) {
                     for (Star connected : star.connections) {
+
+
+                        g2.setColor(new Color(255, 255, 255, 31)); // faint outer glow
+                        g2.setStroke(new BasicStroke(8));
                         g2.drawLine((int) star.x, (int) star.y, (int) connected.x, (int) connected.y);
+
+                        g2.setColor(new Color(255, 255, 255, 74)); // mid glow
+                        g2.setStroke(new BasicStroke(4));
+                        g2.drawLine((int) star.x, (int) star.y, (int) connected.x, (int) connected.y);
+
+                        g2.setColor(new Color(255, 255, 255)); // core beam
+                        g2.setStroke(new BasicStroke(1));
+                        g2.drawLine((int) star.x, (int) star.y, (int) connected.x, (int) connected.y);
+
                     }
                 }
 
@@ -114,16 +132,34 @@ public void loadFromFile(String filename) throws IOException {
                         }
 
 
+                        //combat alert animation
                         if (star.hasCombat) {
                             star.combatVisible = true;
                             int circleX = (int) (star.x + 30 - flashRadius);
                             int circleY = (int) (star.y + 30 - flashRadius);
 
                             float diameter = flashRadius * 2;
-                            g2.setColor(Color.RED);
+                            g2.setColor(Color.WHITE);
                             g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
 
 
+                        } else if (star.recentCombat) {
+                            int circleX = (int) (star.x + 30 - flashRadius);
+                            int circleY = (int) (star.y + 30 - flashRadius);
+
+                            float diameter = flashRadius * 2;
+                            for (CombatManager combatManager : gamePanel.activeCombats) {
+                                if (combatManager.star.name.equals(star.name)) {
+                                    if (combatManager.playerWon()) {
+                                        g2.setColor(Color.GREEN);
+                                    } else {
+                                        g2.setColor(Color.RED);
+                                    }
+                                    break;
+                                }
+                            }
+
+                            g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
                         }
                     } else {
                         g2.setColor(new Color(133, 121, 121));
@@ -135,10 +171,51 @@ public void loadFromFile(String filename) throws IOException {
 //                            g2.setColor(Color.GRAY);
                                 break;
                             case BEGUN:
-                                g2.setColor(new Color(79, 118, 214));
+                                if (star.owner == 1)
+                                    g2.setColor(new Color(79, 118, 214));
+                                else
+                                    g2.setColor(new Color(159, 56, 56));
                                 break;
                             case COLONISED:
-                                g2.setColor(gamePanel.blueColour);
+
+                                if (star.owner == 1) {
+                                    int ovalDiameter = 22;
+                                    g2.setColor(new Color(5, 211, 18, 255));
+                                    g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
+
+                                    ovalDiameter = 25;
+                                    g2.setColor(new Color(5, 211, 18, 137));
+                                    g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
+
+
+                                    ovalDiameter = 30;
+                                    g2.setColor(new Color(5, 211, 18, 52));
+                                    g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
+
+
+                                    g2.setColor(gamePanel.blueColour);
+                                } else if (star.owner == 2) {
+                                    if (visitedSnapshot.contains(star)) {
+                                        int ovalDiameter = 22;
+                                        g2.setColor(new Color(255, 2, 2, 255));
+                                        g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
+
+                                        ovalDiameter = 25;
+                                        g2.setColor(new Color(255, 0, 0, 134));
+                                        g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
+
+
+                                        ovalDiameter = 30;
+                                        g2.setColor(new Color(255, 0, 0, 45));
+                                        g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
+
+                                        g2.setColor(new Color(58, 8, 8, 255));
+
+                                    } else {
+                                        g2.setColor(new Color(133, 121, 121));
+                                    }
+
+                                }
                                 break;
                             case ABANDONED:
                                 g2.setColor(new Color(42, 42, 62));

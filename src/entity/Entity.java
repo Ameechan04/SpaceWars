@@ -42,6 +42,7 @@ public class Entity {
     public Star currentStar;
     public int targetX = -1;
     public int targetY = -1;
+    public boolean defending = false; //whether or not the entity was at the star first or second
 
     public int buildCost;
     protected int currentHealth, maxHealth, damage;

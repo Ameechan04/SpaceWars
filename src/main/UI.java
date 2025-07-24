@@ -325,6 +325,7 @@ public class UI {
 
   }
     private void drawBuildOptions(Graphics2D graphics2D) {
+        if (star.owner != 1) return;
         int padding = 10;
         int frameWidth = 40;
         int buttonWidth = 240;

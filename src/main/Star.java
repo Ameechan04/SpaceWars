@@ -29,7 +29,10 @@ public class Star {
     int owner = -1;
     public ArrayList<StationaryEntity> satellites = new ArrayList<>();
     public long population = 0;
+    public Ship.Faction orbitController = null;
     public boolean hasCombat = false;
+    public boolean recentCombat = false;
+    public int battleCounter;
 
     public void updateColonisation(GameClock gameClock, UI ui) {
         if (this.colonised == Colonised.BEGUN) {
@@ -88,6 +91,7 @@ public class Star {
         this.connections = new ArrayList<>();
         int hitboxSize = 24; // Increase this as needed for better click accuracy
 
+        battleCounter = 0;
         // Centre the hitbox around (x, y)
         int hitboxX = (int) x - hitboxSize / 2;
         int hitboxY = (int) y - hitboxSize / 2;

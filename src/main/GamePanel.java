@@ -61,7 +61,8 @@ public class GamePanel extends JPanel implements Runnable {
     ShipBuilderHelper shipBuilderHelper = new ShipBuilderHelper(this);
     public UI ui = new UI(this);
     public GameClock gameClock = new GameClock();
-    public CombatManager combatManager = new CombatManager(this);
+//    public CombatManager combatManager = new CombatManager(this);
+    List<CombatManager> activeCombats = new ArrayList<>();
 
 
 
@@ -110,14 +111,14 @@ Color blueColour = new Color(51, 63, 220);
 //            System.out.println("Overlay " + i + ": " + (starOverlays[i] != null ? "OK" : "Missing"));
 //        }
         Star alpha = starMap.getStar("Alpha");
-        alpha.quality = Star.Quality.RICH;
-        alpha.colonised = Star.Colonised.COLONISED;
-        starMap.colonisedStars.add(alpha);
-        alpha.population = 10000000000L;
+        createHomeworld(1, alpha);
+
         Star Avalon = starMap.getStar("Avalon");
+        createHomeworld(2, Avalon);
 
 
-            scout = new Scout(this, alpha);  // initial position doesn't matter much here
+
+        scout = new Scout(this, alpha);  // initial position doesn't matter much here
             addShip(scout);
             scout.enterOrbit(alpha);
             visitedStars.add(alpha);
@@ -134,8 +135,8 @@ Color blueColour = new Color(51, 63, 220);
         e1.enterOrbit(alpha);
         addShip(e1);
 
-        for (int i = 0; i < 10; i++) {
-            e2 = new Frigate(this, alpha);
+        for (int i = 0; i < 8; i++) {
+            e2 = new Scout(this, alpha);
             e2.faction = Entity.Faction.PLAYER;
             e2.enterOrbit(alpha);
 
@@ -149,16 +150,23 @@ Color blueColour = new Color(51, 63, 220);
             alpha.satellites.add(satellite);
             addStationaryEntity(satellite);
 
-        SmallSatellite enemy = new SmallSatellite(this, Avalon, Avalon.satellites.size());
-        enemy.faction = Entity.Faction.ENEMY;
-        Avalon.satellites.add(enemy);
-        this.addStationaryEntity(enemy);
-
-        for (int i = 0; i < 1; i++) {
-            enemy = new SmallSatellite(this, Avalon, Avalon.satellites.size());
+            SmallSatellite enemy = new SmallSatellite(this, Avalon, Avalon.satellites.size());
             enemy.faction = Entity.Faction.ENEMY;
             Avalon.satellites.add(enemy);
             this.addStationaryEntity(enemy);
+//
+//        for (int i = 0; i < 2; i++) {
+//            enemy = new SmallSatellite(this, Avalon, Avalon.satellites.size());
+//            enemy.faction = Entity.Faction.ENEMY;
+//            Avalon.satellites.add(enemy);
+//            this.addStationaryEntity(enemy);
+//        }
+//
+        for (int i = 0; i < 2; i++) {
+            e3 = new Frigate(this, Avalon);
+            e3.faction = Entity.Faction.ENEMY;
+            e3.enterOrbit(Avalon);
+            this.addShip(e3);
         }
 
 
@@ -224,8 +232,26 @@ Color blueColour = new Color(51, 63, 220);
 
 
         if (gameClock.isNewDay()) {
-            combatManager.dailyCombat();
+            detectCombat();
+
+            Iterator<CombatManager> iter = activeCombats.iterator();
+            while (iter.hasNext()) {
+                CombatManager combatManager = iter.next();
+                combatManager.dailyCombat();
+
+                if (combatManager.combatRecently) {
+                    combatManager.daysPassedSinceEnding++;
+
+                    if (combatManager.daysPassedSinceEnding > 30) {
+                        combatManager.showResult = false;
+                        combatManager.star.recentCombat = false;
+                        combatManager.star.hasCombat = false;
+                        iter.remove(); // safe removal
+                    }
+                }
+            }
         }
+
 
 //        System.out.println("total game days passed: " + gameClock.getTotalGameDays());
 
@@ -249,6 +275,35 @@ Color blueColour = new Color(51, 63, 220);
        }
 
        ui.updateMessages(elapsedTime);
+
+    }
+
+    private void detectCombat() {
+        HashMap<Star, List<Entity>> starToPlayerEntities = new HashMap<>();
+        HashMap<Star, List<Entity>> starToEnemyEntities = new HashMap<>();
+
+        for (Entity e : getPlayerEntities()) {
+            if (e.currentStar != null) {
+                starToPlayerEntities.computeIfAbsent(e.currentStar, k -> new ArrayList<>()).add(e);
+            }
+        }
+        for (Entity e : getEnemyEntities()) {
+            if (e.currentStar != null) {
+                starToEnemyEntities.computeIfAbsent(e.currentStar, k -> new ArrayList<>()).add(e);
+            }
+        }
+
+        for (Star star : starToPlayerEntities.keySet()) {
+            if (starToEnemyEntities.containsKey(star) && !star.hasCombat) {
+                // New battle! Create a CombatManager:
+                CombatManager manager = new CombatManager(this, star,
+                        starToPlayerEntities.get(star),
+                        starToEnemyEntities.get(star)
+                );
+                activeCombats.add(manager);
+                star.hasCombat = true;
+            }
+        }
 
     }
 
@@ -288,7 +343,9 @@ Color blueColour = new Color(51, 63, 220);
             ui.draw(g2);
 
 
-            combatManager.combatGUI.draw(g2);
+            for (CombatManager combatManager : activeCombats) {
+                combatManager.combatGUI.draw(g2);
+            }
 //            combatManager.combatGUI.drawCombatAnimations(g2);
         }
         g2.dispose();
@@ -421,6 +478,19 @@ Color blueColour = new Color(51, 63, 220);
         return getEntities().stream()
                 .filter(s -> s.getFaction() == Entity.Faction.ENEMY)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * @param playerNum The owner of the star (1 - player, 2 - enemy).
+     * @param star The star to be set as the homeworld.
+     */
+    private void createHomeworld(int playerNum, Star star) {
+        star.quality = Star.Quality.RICH;
+        star.colonised = Star.Colonised.COLONISED;
+        starMap.colonisedStars.add(star);
+        star.owner = playerNum;
+        star.population = 9_000_000_000L;
     }
 
 
