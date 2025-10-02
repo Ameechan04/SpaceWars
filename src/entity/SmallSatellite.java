@@ -11,8 +11,8 @@ import java.io.IOException;
 public class SmallSatellite extends StationaryEntity {
 
 
-    public SmallSatellite(GamePanel gamePanel, Star currentStar, int indexInOrbit) {
-        super(gamePanel, "Small Satellite", currentStar, true, gamePanel.buildCosts.get("Small Satellite"), 70, 10);
+    public SmallSatellite(GamePanel gamePanel, Star currentStar, int indexInOrbit, Faction faction) {
+        super(gamePanel, "Small Satellite", currentStar, true, gamePanel.humanPlayer.getBuildCost("smallsatellite"), 70, 10, faction);
 
         // Calculate angle with consistent spacing (10px along orbit)
         int spacing = 10;

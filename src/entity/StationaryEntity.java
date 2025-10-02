@@ -13,8 +13,8 @@ public abstract class StationaryEntity extends Entity {
     public boolean hasVisibleOrbit = false;
 
 
-    public StationaryEntity(GamePanel gamePanel, String name,Star currentStar, boolean hasVisibleOrbit, int buildCost, int maxHealth, int damage) {
-        super(gamePanel, name, buildCost, maxHealth, damage);
+    public StationaryEntity(GamePanel gamePanel, String name,Star currentStar, boolean hasVisibleOrbit, int buildCost, int maxHealth, int damage, Faction faction) {
+        super(gamePanel, name, buildCost, maxHealth, damage, faction);
         this.currentStar = currentStar;
         orbitOffsetX = -12;
         orbitOffsetY = +10;

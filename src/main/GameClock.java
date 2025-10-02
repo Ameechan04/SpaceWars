@@ -14,7 +14,7 @@ public class GameClock {
 
     // In GamePanel.update()
     public void updateTime(double elapsedRealSeconds) {
-        dayCounter += elapsedRealSeconds * 5 * gameSpeed; // 5 in-game days per real second
+        dayCounter += elapsedRealSeconds * 0.5 * gameSpeed; //1 in-game days per real second
 
         if (dayCounter >= 1.0) {
             int daysToAdvance = (int) dayCounter;

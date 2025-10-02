@@ -1,5 +1,7 @@
 package main;
 
+import entity.Entity;
+
 // BuildTask.java
 public class BuildTask {
     public enum Type { SHIP, STATIONARY }
@@ -8,9 +10,11 @@ public class BuildTask {
     public Star star;
     public double scheduledCompletionDay, startDay;
     public Type type;
+    public Entity.Faction faction;
     private GamePanel gamePanel;
-    public BuildTask(String buildType, Star star, double startDay, double completionDay, Type type, GamePanel gamePanel) {
+    public BuildTask(String buildType, Star star, double startDay, double completionDay, Type type, GamePanel gamePanel, Entity.Faction faction) {
         this.buildType = buildType;
+        this.faction = faction;
         this.star = star;
         this.startDay = startDay;
         this.scheduledCompletionDay = completionDay;

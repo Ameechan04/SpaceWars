@@ -37,8 +37,8 @@ public class CombatGUI {
     Star star;
     String starName;
     int battleCount;
-    ArrayList<Entity> friendlyEntities;
-    ArrayList<Entity> enemyEntities;
+
+//    ArrayList<Entity> enemyEntities;
 
     RoundRectangle2D combatPanelBackground;
     RoundRectangle2D closeButton;
@@ -68,8 +68,8 @@ public class CombatGUI {
 
         this.star = manager.star;
 //        starName = manager.starName;
-        this.friendlyEntities = manager.playerEntities;
-        this.enemyEntities = manager.enemyEntities;
+//        this.manager.playerEntities = manager.playerEntities;
+//        this.enemyEntities = manager.enemyEntities;
 
 
 
@@ -275,7 +275,7 @@ public class CombatGUI {
             int rowOffset = 0;
             int imgWidthHeight = 100;
 
-            for (Entity e : friendlyEntities) {
+            for (Entity e : manager.playerEntities) {
                 if (count > 18) {
                     rowOffset += 50;
                     count = 0;
@@ -299,7 +299,7 @@ public class CombatGUI {
             rowOffset = 0;
             count = 0;
 
-            for (Entity e : enemyEntities) {
+            for (Entity e : manager.enemyEntities) {
                 if (count > 18) {
                     rowOffset += 50;
                     count = 0;
@@ -320,7 +320,7 @@ public class CombatGUI {
             }
 
 
-            for (Entity e : friendlyEntities) {
+            for (Entity e : manager.playerEntities) {
                 System.out.println("friendly E : " + e.name);
                 Point p = this.entityCentreMap.get(e);
                 Ellipse2D centreDot = new Ellipse2D.Double(p.x - 1, p.y - 1, 2, 2);
@@ -329,7 +329,7 @@ public class CombatGUI {
                 g2.draw(centreDot);
             }
 
-            for (Entity e : enemyEntities) {
+            for (Entity e : manager.enemyEntities) {
                 System.out.println("enemy E : " + e.name);
 
                 Point p = this.entityCentreMap.get(e);
@@ -340,13 +340,13 @@ public class CombatGUI {
             }
 
             System.out.println("Friendly Entities");
-            for (Entity e : friendlyEntities) {
+            for (Entity e : manager.playerEntities) {
                 System.out.println(e.name + " @" + e.hashCode());
             }
 
 
             System.out.println("Enemy Entities:");
-            for (Entity e : enemyEntities) {
+            for (Entity e : manager.enemyEntities) {
                 System.out.println(e.name + " @" + e.hashCode());
             }
 
@@ -381,10 +381,23 @@ public class CombatGUI {
             float y1 = p1.y;
             float x2 = p2.x;
             float y2 = p2.y;
-            GradientPaint gradient = new GradientPaint(
-                     x1, y1, Color.RED,
-                   x2,  y2, Color.YELLOW
-            );
+            GradientPaint gradient;
+            if (attacker.faction.equals(Entity.Faction.PLAYER)) {
+                Color c = new Color(94, 197, 102);
+                gradient = new GradientPaint(
+                        x1, y1, Color.GREEN,
+                        x2,  y2, c
+                );
+
+            } else {
+                Color c = new Color(153,0,0);
+
+                gradient = new GradientPaint(
+                        x1, y1, Color.RED,
+                        x2,  y2, c
+                );
+            }
+
             g2.setPaint(gradient);
             g2.setStroke(new BasicStroke(3)); // thicker line
             g2.drawLine((int) x1, (int) y1, (int) x2, (int) y2);
@@ -430,6 +443,8 @@ public class CombatGUI {
                 default: return number + "th";
             }
         }
+
+
 
 
 }

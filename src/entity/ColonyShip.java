@@ -9,8 +9,8 @@ import java.awt.*;
 import java.io.IOException;
 
 public class ColonyShip extends Ship{
-    public ColonyShip(GamePanel gamePanel, Star currentStar) {
-        super(gamePanel, "Colony Ship", currentStar, 0.5, 30, -30, gamePanel.buildCosts.get("Colony Ship"), 200, 1);
+    public ColonyShip(GamePanel gamePanel, Star currentStar, Faction faction) {
+        super(gamePanel, "Colony Ship", currentStar, 0.5, 30, -30, gamePanel.humanPlayer.getBuildCost("colonyship"), 200, 1, faction);
 
 
 

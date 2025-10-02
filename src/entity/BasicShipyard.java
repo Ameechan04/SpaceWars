@@ -8,8 +8,8 @@ import java.awt.*;
 import java.io.IOException;
 
 public class BasicShipyard extends Station{
-    public BasicShipyard(GamePanel gamePanel, Star currentStar) {
-        super(gamePanel, "Basic Shipyard", currentStar, gamePanel.buildCosts.get("Basic Shipyard") , 200, 0);
+    public BasicShipyard(GamePanel gamePanel, Star currentStar, Faction faction) {
+        super(gamePanel, "Basic Shipyard", currentStar, gamePanel.humanPlayer.getBuildCost("basicshipyard") , 200, 0, faction);
 
         solidArea = new Rectangle(worldX, worldY, gamePanel.TILE_SIZE , gamePanel.TILE_SIZE);
         solidAreaDefaultX = worldX;

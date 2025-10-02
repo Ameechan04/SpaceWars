@@ -8,8 +8,8 @@ import java.awt.*;
 import java.io.IOException;
 
 public class Scout extends Ship {
-    public Scout(GamePanel gamePanel, Star currentStar) {
-        super(gamePanel, "Scout", currentStar, 2, 25, 25, gamePanel.buildCosts.get("Scout"), 50, 5);
+    public Scout(GamePanel gamePanel, Star currentStar, Faction faction) {
+        super(gamePanel, "Scout", currentStar, 1.02, 25, 25, gamePanel.humanPlayer.getBuildCost("scout"), 50, 5, faction);
 
         this.solidOffsetX = 15;
         this.solidOffsetY = 15;

@@ -1,0 +1,4 @@
+Star Alpha 100 100 connectsTo Beta
+Star Beta 100 300 connectsTo Gamma
+Star Gamma 100 500 connectTo Avalon
+Star Avalon 200 500 connectsTo Gamma Beta

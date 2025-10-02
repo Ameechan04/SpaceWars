@@ -15,17 +15,18 @@ public class Entity {
 
     public enum Faction { PLAYER, ENEMY }
 
-    public Faction faction;
+    public final Faction faction;
     public int orbitOffsetX, orbitOffsetY;
     public boolean inOrbit = true;
     public String name;
     public double exactCentreX, exactCentreY;
     BufferedImage errorImage;
 
-
+    public int screenX;
+    public int screenY;
     public int worldX, worldY;  //ONLY for rendering and hit box alignment
-    int solidOffsetX;// = worldX;  //Since the images are larger than the ships (whitespace), the offset shows where the image actually starts
-    int solidOffsetY;// = worldY;
+    public int solidOffsetX;// = worldX;  //Since the images are larger than the ships (whitespace), the offset shows where the image actually starts
+    public int solidOffsetY;// = worldY;
     public int centreX, centreY;
     public int speed, solidAreaDefaultX, solidAreaDefaultY;
     public BufferedImage left1, right1;
@@ -51,7 +52,7 @@ public class Entity {
 
 
 
-    public Entity(GamePanel gp, String name, int cost, int hp, int dmg) {
+    public Entity(GamePanel gp, String name, int cost, int hp, int dmg, Faction faction) {
         this.gamePanel = gp;
         this.name = name;
 
@@ -73,19 +74,14 @@ public class Entity {
         maxHealth   = hp;
         currentHealth = hp;
         damage      = dmg;
-        faction     = Faction.PLAYER;
+        this.faction     = faction;
     }
-
-
-
-
-
-//    public void updateCentreFromWorldPosition() {
-//        this.centreX = worldX + gamePanel.TILE_SIZE / 2;
-//        this.centreY = worldY + gamePanel.TILE_SIZE / 2;
-//        this.exactCentreX = centreX;
-//        this.exactCentreY = centreY;
-//    }
+    public void updateScreenPosition(double cameraOffsetX, double cameraOffsetY, double zoom) {
+        screenX = (int) ((worldX + solidOffsetX - cameraOffsetX) * zoom);
+        screenY = (int) ((worldY + solidOffsetY - cameraOffsetY) * zoom);
+        centreX = screenX + solidArea.width / 2;
+        centreY = screenY + solidArea.height / 2;
+    }
 
 
     /*Only method that sets the position*/
@@ -197,6 +193,10 @@ public class Entity {
                 4, 4);
     }
 
+
+    public int getMaxHealth(){
+        return maxHealth;
+    }
 
 
 

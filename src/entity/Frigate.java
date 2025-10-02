@@ -8,8 +8,8 @@ import java.awt.*;
 import java.io.IOException;
 
 public class Frigate extends Ship{
-    public Frigate(GamePanel gamePanel, Star currentStar) {
-        super(gamePanel, "Frigate", currentStar, 1.5, 25, 25, gamePanel.buildCosts.get("Frigate"), 120, 10);
+    public Frigate(GamePanel gamePanel, Star currentStar, Faction faction) {
+        super(gamePanel, "Frigate", currentStar, 1.01, 25, 25, gamePanel.humanPlayer.getBuildCost("frigate"), 120, 10, faction);
 
         this.solidOffsetX = 10;
         this.solidOffsetY = 15;

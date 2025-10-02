@@ -1,5 +1,7 @@
 package main;
+import entity.Entity;
 import entity.Scout;
+import entity.Ship;
 import entity.SmallSatellite;
 
 import javax.imageio.ImageIO;
@@ -13,6 +15,10 @@ import java.util.LinkedList;
 
 /*HANDLES ALL ONSCREEN UI SUCH AS TEXT, ITEM ICONS ETC */
 public class UI {
+//    public Ship selectedShip = null; // keep track of currently selected ship
+    public ArrayList<Ship> selectedShips = new ArrayList<>(); // for multi-ship selection
+    private final ArrayList<Rectangle> shipIconBounds = new ArrayList<>(); // for click detection
+
 
 
     final ArrayList<Message> messages = new ArrayList<>();
@@ -21,6 +27,8 @@ public class UI {
     private int endOfTextY;
     public boolean starIsSelected;
     GamePanel gamePanel;
+    AIDecisionDisplay aidecisionDisplay;
+
     Font arial_24B, arial_40B, arial_80B, buttonFont;
     FontMetrics fm24, fm40, fmBtn;
     BufferedImage keyImage;
@@ -64,6 +72,8 @@ public class UI {
 
        // OBJkey key = new OBJkey();
        // keyImage = key.image;
+
+        aidecisionDisplay = new AIDecisionDisplay(gamePanel);
     }
 
     public void setFontMetrics(Graphics g) {
@@ -100,8 +110,76 @@ public class UI {
             //TOP LEFT TEMPORARY MESSAGE
             drawMessages(graphics2D);
 
+            aidecisionDisplay.drawAIDebugPanel(graphics2D);
+
+            drawSelectedShipPanel(graphics2D);
+
+
+
         }
     }
+
+    private void drawSelectedShipPanel(Graphics2D g2) {
+        if (selectedShips == null || selectedShips.isEmpty()) return;
+
+        if (selectedShips.size() == 1) {
+            Ship single = selectedShips.get(0);
+            drawSingleShipPanel(g2, single);
+        } else {
+            drawMultiShipPanel(g2, selectedShips);
+        }
+    }
+
+    private void drawMultiShipPanel(Graphics2D g2, ArrayList<Ship> ships) {
+        int padding = 5;
+        int iconSize = 32;
+        int panelHeight = 150;
+        int panelX = 20;
+        int panelY = gamePanel.getHeight() - panelHeight - 20; // 20px margin from bottom
+
+        Rectangle multiShipPanelBounds = new Rectangle(panelX, panelY, 300, panelHeight);
+
+        int x = multiShipPanelBounds.x + padding;
+        int y = multiShipPanelBounds.y + padding;
+
+        g2.setColor(SEMI_TRANSPARENT_BLACK);
+        g2.fillRoundRect(multiShipPanelBounds.x, multiShipPanelBounds.y, multiShipPanelBounds.width, multiShipPanelBounds.height, 10, 10);
+
+        g2.setColor(Color.WHITE);
+        g2.drawRoundRect(multiShipPanelBounds.x, multiShipPanelBounds.y, multiShipPanelBounds.width, multiShipPanelBounds.height, 10, 10);
+
+        shipIconBounds.clear();
+
+        String currentType = null;
+
+        for (Ship ship : ships) {
+            // Draw separator line if type changes
+            if (currentType != null && !ship.name.equals(currentType)) {
+                y += iconSize + padding / 2;
+                g2.setColor(Color.GRAY);
+                g2.fillRect(multiShipPanelBounds.x, y, multiShipPanelBounds.width, 2);
+                y += padding;
+            }
+
+            currentType = ship.name; // <- assign the current type for next iteration
+
+            BufferedImage shipImage = ship.facingLeft ? ship.left1 : ship.right1;
+            if (shipImage != null) {
+                g2.drawImage(shipImage, x, y, iconSize, iconSize, null);
+            } else {
+                g2.setColor(Color.CYAN);
+                g2.fillRect(x, y, iconSize, iconSize);
+            }
+            shipIconBounds.add(new Rectangle(x, y, iconSize, iconSize));
+
+            x += iconSize + padding;
+            if (x + iconSize > multiShipPanelBounds.x + multiShipPanelBounds.width) {
+                x = multiShipPanelBounds.x + padding;
+                y += iconSize + padding;
+            }
+        }
+    }
+
 
     private void drawTitleScreen(Graphics2D g2) {
         //title
@@ -192,28 +270,28 @@ public class UI {
         String formattedDate = String.format("%02d / %02d / %04d",
                 gamePanel.gameClock.day, gamePanel.gameClock.month, gamePanel.gameClock.year);
 
-
         int textWidth = fm40.stringWidth(formattedDate);
         int textHeight = fm40.getHeight();
-
         int padding = 10;
 
-        int panelWidth = gamePanel.getWidth();
-        int rectWidth = textWidth + padding * 2;
-        int rectHeight = textHeight + padding * 2;
-        //int x = panelWidth - rectWidth - 20; // 20 px from the right edge
-        int x = 20; // 20 from left
-        int y = gamePanel.getHeight() - rectHeight - 20; // 20 px from the bottom
+        // Position just left of star panel
+        int panelWidth = SCREEN_WIDTH / 5; // same as in drawStarPanel
+        int panelStartX = SCREEN_WIDTH - panelWidth;
+        int x = panelStartX - textWidth - 2 * padding - 10; // left of panel
+        int y = 20; // 20px from top
 
-        graphics2D.setColor(SEMI_TRANSPARENT_BLACK); // semi-transparent black
-        graphics2D.fillRoundRect(x, y, rectWidth, rectHeight, 10, 10);
+        graphics2D.setColor(SEMI_TRANSPARENT_BLACK);
+        graphics2D.fillRoundRect(x, y, textWidth + 2 * padding, textHeight + 2 * padding, 10, 10);
+
         graphics2D.setColor(Color.WHITE);
-        graphics2D.drawRoundRect(x, y, rectWidth, rectHeight, 10, 10);
-        graphics2D.setColor(Color.WHITE);
+        graphics2D.drawRoundRect(x, y, textWidth + 2 * padding, textHeight + 2 * padding, 10, 10);
+
         graphics2D.drawString(formattedDate, x + padding, y + padding + fm40.getAscent());
+
+
     }
 
-  private void drawStarPanel(Graphics2D graphics2D, Star star) {
+    private void drawStarPanel(Graphics2D graphics2D, Star star) {
       graphics2D.setFont(arial_40B);
 
       int panelWidth = SCREEN_WIDTH / 5;
@@ -233,7 +311,7 @@ public class UI {
       graphics2D.setFont(arial_24B);
 
 
-      if (!gamePanel.visitedStars.contains(star)) {
+      if (!gamePanel.humanPlayer.getVisitedStars().contains(star)) {
           message = "Quality: UNKNOWN";
       } else {
           message = "Quality: " + star.quality;
@@ -245,7 +323,7 @@ public class UI {
       graphics2D.drawString(message, x,textHeight);
 
 
-      if (!gamePanel.visitedStars.contains(star)) {
+      if (!gamePanel.humanPlayer.getVisitedStars().contains(star)) {
           message = "Status: UNEXPLORED";
       } else {
           message = "Status: " + star.colonised;
@@ -264,7 +342,7 @@ public class UI {
       graphics2D.drawString(message, x,textHeight);
 
       //unvisited
-      if (!gamePanel.visitedStars.contains(star)) {
+      if (gamePanel.humanPlayer.getVisitedStars().contains(star)) {
           message = "UNKNOWN";
           //colonised
       } else if (star.colonised == Star.Colonised.COLONISED) {
@@ -325,7 +403,7 @@ public class UI {
 
   }
     private void drawBuildOptions(Graphics2D graphics2D) {
-        if (star.owner != 1) return;
+        if (star.owner != Entity.Faction.PLAYER) return;
         int padding = 10;
         int frameWidth = 40;
         int buttonWidth = 240;
@@ -409,19 +487,20 @@ public class UI {
             graphics2D.setColor(Color.WHITE);
 
             String name = "Scout";
-            String text =  name+"   ₡" + gamePanel.buildCosts.get(name) ;
+            String text =  name+"   ₡" + gamePanel.humanPlayer.getBuildCost(name.toLowerCase()) ;
             int textWidth = fmBtn.stringWidth(text);
             int textX = buildScoutButton.x + (buildScoutButton.width - textWidth) / 2;
             int textY = buildScoutButton.y + (buildScoutButton.height + fmBtn.getAscent()) / 2 - 2;
             graphics2D.drawString(text, textX, textY);
             name = "Frigate";
-            text =  name+"   ₡" + gamePanel.buildCosts.get(name) ;
+            text =  name+"   ₡" + gamePanel.humanPlayer.getBuildCost(name.toLowerCase()) ;
             textWidth = fmBtn.stringWidth(text);
             textX = buildFrigateButton.x + (buildFrigateButton.width - textWidth) / 2;
             textY = buildFrigateButton.y + (buildFrigateButton.height + fmBtn.getAscent()) / 2 - 2;
             graphics2D.drawString(text, textX, textY);
             name = "Colony Ship";
-            text =  name+"   ₡" + gamePanel.buildCosts.get(name) ;
+            String nameTransformed = "colonyship";
+            text =  name+"   ₡" + gamePanel.humanPlayer.getBuildCost(name.toLowerCase()) ;
             textWidth = fmBtn.stringWidth(text);
             textX = buildColonyShipButton.x + (buildColonyShipButton.width - textWidth) / 2;
             textY = buildColonyShipButton.y + (buildColonyShipButton.height + fmBtn.getAscent()) / 2 - 2;
@@ -450,9 +529,10 @@ public class UI {
             //                    BufferedImage image = ImageIO.read(getClass().getResourceAsStream("/generatedImages/smallSatellite.jpeg"));
 
             graphics2D.drawImage(smallSatelliteImage, layoutStartX + padding, y, frameWidth, 40, null);
+            String nameTransformed = "smallsatellite";
 
             String name = "Small Satellite";
-            String text =  name+"   ₡" + gamePanel.buildCosts.get(name) ;
+            String text =  name+"   ₡" + gamePanel.humanPlayer.getBuildCost(nameTransformed) ;
             graphics2D.setFont(buttonFont);
             graphics2D.setColor(Color.white);
             int textWidth = fmBtn.stringWidth(text);
@@ -526,13 +606,18 @@ public class UI {
 
     }
 
-    private void drawColonisationBarBelowStar(Graphics2D graphics2D, Star star) {
+    private void drawColonisationBarBelowStar(Graphics2D g2, Star star) {
         double progress = (gamePanel.gameClock.getTotalGameDays() - star.colonisationStartDate) / 180.0;
-        int barWidth = 20;
-        int barX = (int) (star.x - ((float) barWidth / 2));
-       int barY = (int) star.y + 15;
-        int barHeight = 10;
-        drawProgressBar(graphics2D, barX, barY, barWidth, barHeight, progress);
+
+        double zoom = gamePanel.zoom;
+        int barWidth = (int) (20 * zoom);
+        int barHeight = (int) (10 * zoom);
+
+        // Convert world coordinates to screen coordinates
+        int screenX = (int) ((star.x - barWidth / 2.0 - gamePanel.cameraOffsetX) * zoom);
+        int screenY = (int) ((star.y + 15 - gamePanel.cameraOffsetY) * zoom);
+
+        drawProgressBar(g2, screenX, screenY, barWidth, barHeight, progress);
     }
 
 
@@ -565,7 +650,7 @@ public class UI {
     }
 
     private void drawMoney(Graphics2D g2) {
-        String moneyText = "₡" + gamePanel.money;
+        String moneyText = "₡" + gamePanel.humanPlayer.getMoney();
         g2.setFont(g2.getFont().deriveFont(Font.BOLD, 24f));
         FontMetrics fm = g2.getFontMetrics();
 
@@ -579,6 +664,8 @@ public class UI {
         g2.setColor(Color.YELLOW);
         g2.drawString(moneyText, x, y);
     }
+
+
 
     private void drawMessages(Graphics2D g2) {
         int x = 20;
@@ -630,6 +717,61 @@ public class UI {
         int filledWidth = (int) (width * progress);
         g2.setColor(Color.green);
         g2.fillRect(x + 1, y + 1, filledWidth - 1, height - 1);
+    }
+
+
+    private void drawSingleShipPanel(Graphics2D g2, Ship selectedShip) {
+        if (selectedShip == null) return;
+
+
+        int panelWidth = 300;
+        int panelHeight = 120;
+        int padding = 10;
+        int x = 20;
+        int y = gamePanel.getHeight() - panelHeight - 20; // 20px from bottom
+
+        // Draw panel background
+        g2.setColor(SEMI_TRANSPARENT_BLACK);
+        g2.fillRoundRect(x, y, panelWidth, panelHeight, 10, 10);
+
+        g2.setColor(Color.WHITE);
+        g2.drawRoundRect(x, y, panelWidth, panelHeight, 10, 10);
+
+        // Draw ship image in a square
+        int shipSquareSize = 80;
+        int shipX = x + padding;
+        int shipY = y + padding;
+        BufferedImage shipImage = selectedShip.facingLeft ? selectedShip.left1 : selectedShip.right1;
+        if (shipImage != null) {
+            g2.drawImage(shipImage, shipX, shipY, shipSquareSize, shipSquareSize, null);
+        }
+
+        // Draw ship name on top of the square
+        g2.setFont(arial_24B);
+        String name = selectedShip.name;
+        int nameX = shipX;
+        int nameY = shipY - 5; // just above square
+        g2.drawString(name, nameX, nameY);
+
+        // Draw stats to the right
+        int statsX = shipX + shipSquareSize + padding;
+        int statsY = shipY + 20;
+        g2.setFont(buttonFont);
+
+        String healthText = "Health: " + selectedShip.getCurrentHealth() + " / " + selectedShip.getMaxHealth();
+        g2.drawString(healthText, statsX, statsY);
+
+        statsY += 25;
+        String damageText = "Damage: " + selectedShip.getDamage();
+        g2.drawString(damageText, statsX, statsY);
+
+        statsY += 25;
+        String currentStarText = "Current Star: " + (selectedShip.currentStar != null ? selectedShip.currentStar.name : "Moving");
+        g2.drawString(currentStarText, statsX, statsY);
+
+        statsY += 25;
+        String targetStarText = "Moving to: " + (selectedShip.targetStar != null ? selectedShip.targetStar.name : "None");
+        g2.drawString(targetStarText, statsX, statsY);
     }
 
 

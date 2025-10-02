@@ -1,32 +1,80 @@
-Star Alpha 100 150 connectsTo Beta Gamma Hoth
-Star Beta 400 100 connectsTo Alpha Delta
-Star Gamma 120 400 connectsTo Alpha Feta ZeroPoint Echo
-Star Delta 500 300 connectsTo Beta Epsilon Feta Hoth
-Star Epsilon 600 300 connectsTo Delta Helliconia
-Star Feta  250 350 connectsTo Gamma Delta
-Star Hoth 300 220 connectsTo Alpha Delta Helliconia
-Star Helliconia 330 420 connectsTo Hoth Epsilon
-Star ZeroPoint 110 700 connects to Gamma Echo
-Star Echo 190 680 connects to Gamma ZeroPoint Helliconia
-
-Star Nova 700 100 connectsTo Epsilon Vega
-Star Vega 750 180 connectsTo Nova Sirius
-Star Sirius 800 250 connectsTo Vega Solaris
-Star Solaris 820 320 connectsTo Sirius Eden
-Star Eden 800 400 connectsTo Solaris Avalon
-Star Avalon 760 460 connectsTo Eden Lyra
-Star Lyra 720 520 connectsTo Avalon Helliconia
-Star Orion 680 580 connectsTo Lyra
-Star Polaris 650 650 connectsTo Orion
-Star Nebula 600 700 connectsTo Polaris
-Star Andromeda 550 750 connectsTo Nebula
-Star Centauri 500 700 connectsTo Andromeda
-Star Kepler 450 650 connectsTo Centauri
-Star Titan 400 600 connectsTo Kepler
-Star Vulcan 350 550 connectsTo Titan Echo
-Star Edom 710 300 connectsTo Epsilon Solaris
-
-
-Star Zeta 800 700 connectsTo Polaris Avalon
-Star Jamos 820 770 connectsTo Zeta
-
+Star Alpha        170 255 connectsTo Beta Gamma
+Star Beta         374 221 connectsTo Alpha Delta
+Star Gamma        204 510 connectsTo Alpha Feta
+Star Delta        595 238 connectsTo Beta Epsilon
+Star Epsilon      680 510 connectsTo Delta Helliconia
+Star Feta         340 595 connectsTo Gamma Delta
+Star Hoth         476 374 connectsTo Alpha Delta Helliconia
+Star Helliconia   561 714 connectsTo Hoth Epsilon
+Star ZeroPoint    187 1190 connectsTo Gamma Echo
+Star Echo         323 1156 connectsTo ZeroPoint Helliconia
+Star Nova         1190 170 connectsTo Epsilon Vega
+Star Vega         1275 306 connectsTo Nova Sirius
+Star Sirius       1360 425 connectsTo Vega Solaris
+Star Solaris      1394 544 connectsTo Sirius Eden
+Star Eden         1360 680 connectsTo Solaris Avalon
+Star Avalon       1292 782 connectsTo Eden Lyra
+Star Lyra         1224 884 connectsTo Avalon Helliconia Orion
+Star Orion        1156 986 connectsTo Lyra Vulcan Titan
+Star Polaris      1105 1105 connectsTo Orion Nebula
+Star Nebula       1020 1190 connectsTo Polaris Andromeda
+Star Andromeda    935 1275 connectsTo Nebula Centauri
+Star Centauri     850 1190 connectsTo Andromeda Kepler
+Star Kepler       765 1105 connectsTo Centauri Titan
+Star Titan        680 1020 connectsTo Kepler Vulcan
+Star Vulcan       595 935 connectsTo Titan Echo
+Star Edom         1200 510 connectsTo Epsilon Solaris
+Star Zeta         1360 1190 connectsTo Polaris Avalon
+Star Jamos        1394 1309 connectsTo Zeta Midas
+Star Aegis        1785 340 connectsTo Vega Nova
+Star Borealis     85 85 connectsTo Alpha Beta
+Star Caelum       255 136 connectsTo Alpha Beta Gamma
+Star Draco        1530 680 connectsTo Solaris Eden
+Star Equinox      1020 340 connectsTo Delta Epsilon Vega
+Star Fauna        714 850 connectsTo Helliconia Feta Lyra
+Star Gemini       935 952 connectsTo Vulcan Titan Orion
+Star Horizon      1275 850 connectsTo Lyra Avalon Edom
+Star Ignis        1700 255 connectsTo Aegis Nova Vega
+Star Juno         85 1020 connectsTo ZeroPoint Echo Feta
+Star Kronos       1615 595 connectsTo Draco Solaris Eden
+Star LyraMinor    1156 918 connectsTo Lyra Orion Avalon
+Star Midas        1530 1275 connectsTo Jamos Zeta
+Star Nexus        2040 425 connectsTo Ignis Aegis Nova
+Star OrionMinor   1110 1037 connectsTo Orion Polaris Lyra
+Star PolarisMinor 1088 1156 connectsTo Polaris Nebula
+Star Quasar       2210 170 connectsTo Nexus Ignis
+Star Rigel        1870 595 connectsTo Kronos Draco
+Star Sol          1445 714 connectsTo Eden Solaris Horizon
+Star TitanMinor   731 986 connectsTo Titan Kepler Vulcan
+Star Umbra        85 1275 connectsTo Andromeda Centauri Juno
+Star VegaMinor    1326 255 connectsTo Vega Nova
+Star Wolf         1020 1275 connectsTo Nebula Andromeda Centauri
+Star Xenon        1955 340 connectsTo Nexus Quasar Ignis
+Star Ymir         255 680 connectsTo Feta Gamma
+Star Zenith       2380 85 connectsTo Quasar Nexus
+Star Atlas        595 765 connectsTo Feta Helliconia Fauna
+Star Boreas       340 425 connectsTo Gamma Delta Feta
+Star Celestia     850 1020 connectsTo Titan Kepler Centauri
+Star Deneb        1275 544 connectsTo Solaris Sirius
+Star Eos          510 850 connectsTo Fauna Helliconia Titan
+Star Fenrir       1530 850 connectsTo Sol Horizon Draco
+Star Gaia         170 850 connectsTo Ymir Juno ZeroPoint
+Star Helios       1785 510 connectsTo Ignis Kronos Draco
+Star Io           1394 714 connectsTo Sol Solaris Horizon
+Star Janus        782 1156 connectsTo Kepler Titan Centauri
+Star Kappa        1870 255 connectsTo Quasar Ignis
+Star Lumen        629 510 connectsTo Feta Helliconia Epsilon
+Star Maia         1224 510 connectsTo Edom Avalon Vega
+Star Nyx          357 1020 connectsTo Juno Ymir Echo
+Star Orionis      1110 986 connectsTo Orion Polaris Lyra
+Star Phoebe       1346 459 connectsTo Vega Sirius Eden
+Star Quillon      2138 374 connectsTo Nexus Xenon Quasar
+Star Rhea         1020 1139 connectsTo Nebula Polaris Minor
+Star Selene       697 969 connectsTo Titan Vulcan Fauna
+Star Tethys       85 1170 connectsTo Juno ZeroPoint Gaia
+Star Umbriel      255 850 connectsTo Ymir Feta Helliconia
+Star Vesta        1496 595 connectsTo Draco Sol Horizon
+Star Wren         782 1241 connectsTo Kepler Titan Centauri
+Star Xanthe       595 1088 connectsTo Vulcan Titan Selene
+Star Yara         85 680 connectsTo Gaia Ymir
+Star Zephyr       1620 680 connectsTo Draco Sol Fenrir

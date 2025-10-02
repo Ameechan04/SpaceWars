@@ -43,7 +43,6 @@ public class CombatManager {
                 this.battleCounter = this.star.battleCounter;
                 this.playerEntities.addAll(players);
                 this.enemyEntities.addAll(enemies);
-                this.combatGUI = new CombatGUI(this);
                 this.inCombat = true;
                 this.first_turn = true;
                 removeEntitiesFromGamePanel();
@@ -54,10 +53,48 @@ public class CombatManager {
         if (!inCombat) {
             tryStartCombat();
         } else {
+            checkForReinforcements();
+
             combatTurn(); // If combat is ongoing, progress it
         }
 
     }
+
+    public void checkForReinforcements() {
+        List<Entity> incomingPlayers = new ArrayList<>();
+        List<Entity> incomingEnemies = new ArrayList<>();
+
+        for (Entity e : gamePanel.getPlayerEntities()) {
+            if (e.currentStar == star) {
+                incomingPlayers.add(e);
+            }
+        }
+
+        for (Entity e : gamePanel.getEnemyEntities()) {
+            if (e.currentStar == star) {
+                incomingEnemies.add(e);
+            }
+        }
+
+        // Add new reinforcements to combat
+        if (!incomingPlayers.isEmpty()) {
+            playerEntities.addAll(incomingPlayers);
+            removeReinforcementsFromGamePanel(incomingPlayers);
+
+        }
+
+        if (!incomingEnemies.isEmpty()) {
+            enemyEntities.addAll(incomingEnemies);
+            removeReinforcementsFromGamePanel(incomingEnemies);
+
+        }
+
+        if (!incomingPlayers.isEmpty() || !incomingEnemies.isEmpty()) {
+            System.out.println("Reinforcements joined combat at " + star.name);
+        }
+
+    }
+
 
     public void tryStartCombat() {
         playerEntities.clear();
@@ -227,7 +264,7 @@ public class CombatManager {
      * Temporarily removes all entities that are in combat from the global entities list.
      * This ensures that conflicting logic cannot be applied while they are in combat such as moving them by clicking.
      */
-    private void removeEntitiesFromGamePanel(){
+    protected void removeEntitiesFromGamePanel(){
         for (Entity e : playerEntities) {
             if (e instanceof Ship) {
                 gamePanel.removeShip((Ship) e);
@@ -236,6 +273,17 @@ public class CombatManager {
             }
         }
         for (Entity e : enemyEntities) {
+            if (e instanceof Ship) {
+                gamePanel.removeShip((Ship) e);
+            } else {
+                gamePanel.removeStationaryEntity((StationaryEntity) e);
+            }
+        }
+
+    }
+
+    protected void removeReinforcementsFromGamePanel(List<Entity> reinforcements){
+        for (Entity e : reinforcements) {
             if (e instanceof Ship) {
                 gamePanel.removeShip((Ship) e);
             } else {
@@ -260,6 +308,9 @@ public class CombatManager {
                     }else {
                         gamePanel.addStationaryEntity((StationaryEntity) localE);
                     }
+        }
+        if (star.orbitManager != null) {
+            star.orbitManager.recalculateStacks();
         }
     }
 

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Ship extends Entity {
+    // Movement & orbit
+    public boolean clickable = true;
     public boolean enteringOrbit = false;
     private boolean arrivedAtStarCentre = false;
     private double speed;
@@ -16,120 +18,127 @@ public class Ship extends Entity {
     public List<Star> jumpPath = new ArrayList<>();
     public int jumpIndex = 0;
 
-    // Orbit offset defaults (now already inherited)
+    // Orbit offset defaults
     public final int defaultOrbitOffsetX;
     public final int defaultOrbitOffsetY;
+    public int orbitStackIndex = 0; // New: track position in stack
 
-    public double delayedStartDay = -1; // -1 means "move immediately"
-    private boolean hasStartedMoving = false;
+    // Movement rendering
+    public Star startingStarForLeg;
+    private final List<Point> renderPath = new ArrayList<>();
+    private static final BasicStroke DASHED_STROKE =
+            new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5, 5}, 0);
 
-
-
-    public Ship(GamePanel gamePanel, String name, Star currentStar, double speed, int defaultOrbitOffsetX, int defaultOrbitOffsetY, int buildCost, int maxHealth, int damage) {
-        super(gamePanel, name, buildCost, maxHealth, damage);
-
+    public Ship(GamePanel gamePanel, String name, Star currentStar, double speed,
+                int defaultOrbitOffsetX, int defaultOrbitOffsetY,
+                int buildCost, int maxHealth, int damage, Faction faction) {
+        super(gamePanel, name, buildCost, maxHealth, damage, faction);
         this.speed = speed;
-        this.direction = "right";
         this.defaultOrbitOffsetX = defaultOrbitOffsetX;
         this.defaultOrbitOffsetY = defaultOrbitOffsetY;
         this.orbitOffsetX = defaultOrbitOffsetX;
         this.orbitOffsetY = defaultOrbitOffsetY;
-
+        this.startingStarForLeg = currentStar;
         this.currentStar = currentStar;
         this.inOrbit = true;
         this.moving = false;
 
-        // Initial positioning
         if (currentStar != null) {
             setCentrePosition(currentStar.x + orbitOffsetX, currentStar.y + orbitOffsetY);
         }
 
-        // Load fallback image
-        getImage(); // if you're not overriding it in subclasses
+        getImage(); // Load fallback image
     }
 
-    public void startMovingToStarWithDelay(Star targetStar, double delayInGameDays, double currentGameDay) {
-        this.delayedStartDay = currentGameDay + delayInGameDays;
-        this.targetStar = targetStar;
-        this.hasStartedMoving = false;
-    }
-
+    /** Start moving to a destination star */
     public void startMovingToStar(Star destination) {
-        if (currentStar == null) return;
-
-        System.out.println("LEAVING SYSTEM : " + currentStar.name);
-
-        // Save the current star before clearing it
-        Star leavingStar = currentStar;
-        if (leavingStar.orbitingShips.contains(this)) {
-            leavingStar.orbitingShips.remove(this);
-        }
-
-        this.inOrbit = false;
-        this.moving = true;
-        this.currentStar = null; // Must do this before recalculating offsets
-
-        Ship.recalculateOrbitOffsetsAt(gamePanel, leavingStar);
-
-
-        // Handle jump logic
-        if (leavingStar.connections.contains(destination)) {
-            this.targetStar = destination;
+        if (currentStar == destination) {
+            moving = false;
+            enteringOrbit = false;
+            targetStar = null;
             return;
         }
 
-        this.jumpPath = gamePanel.starMap.findShortestPath(leavingStar, destination);
-        if (jumpPath.size() < 2) return;
+        Star leavingStar = currentStar;
 
-        this.jumpIndex = 1;
-        this.targetStar = jumpPath.get(jumpIndex);
+        if (leavingStar != null) {
+            // Remove from orbit lists (only once)
+            leavingStar.orbitingShips.remove(this);
+            if (leavingStar.orbitManager != null) {
+                leavingStar.orbitManager.removeShip(this);
+            }
+
+            // mark as in-transit
+            this.inOrbit = false;
+            this.moving = true;
+            this.orbitOffsetX = defaultOrbitOffsetX;
+            this.orbitOffsetY = defaultOrbitOffsetY;
+            // DO NOT set currentStar = null yet; use leavingStar for path decisions
+        }
+
+        // Determine path FROM leavingStar (if present) — not currentStar which may be nulled later
+        if (leavingStar != null && leavingStar.connections.contains(destination)) {
+            targetStar = destination;
+            prepareRenderPath(leavingStar, destination);
+        } else {
+            Star fromStar = (leavingStar != null) ? leavingStar : currentStar;
+            // If fromStar is still null here then we can't compute path — bail out safely
+            if (fromStar == null) return;
+
+            jumpPath = gamePanel.starMap.findShortestPath(fromStar, destination);
+            if (jumpPath == null || jumpPath.size() < 2) {
+                // nothing to do
+                return;
+            }
+            jumpIndex = 1;
+            targetStar = jumpPath.get(jumpIndex);
+            prepareRenderPath(fromStar, destination);
+        }
+
+        // finally clear currentStar to indicate we're in transit
+        this.currentStar = null;
     }
 
 
-
-    public void update(double currentGameDay) {
-        if (!hasStartedMoving && delayedStartDay > 0) {
-            if (currentGameDay >= delayedStartDay) {
-
-                startMovingToStar(targetStar);
-                hasStartedMoving = true;
-                delayedStartDay = -1;
-            } else {
-                return; // Skip rest of update
-            }
+    /** Precompute render path */
+    private void prepareRenderPath(Star start, Star end) {
+        renderPath.clear();
+        if (jumpPath == null || jumpPath.size() < 2) {
+            renderPath.add(new Point((int) start.x, (int) start.y));
+            renderPath.add(new Point((int) end.x, (int) end.y));
+            return;
         }
 
+        Star from = startingStarForLeg != null ? startingStarForLeg : start;
+        for (int i = jumpIndex; i < jumpPath.size(); i++) {
+            Star to = jumpPath.get(i);
+            renderPath.add(new Point((int) from.x, (int) from.y));
+            renderPath.add(new Point((int) to.x, (int) to.y));
+            from = to;
+        }
+    }
 
+    /** Update ship movement and orbit */
+    public void update(double currentGameDay) {
+        if (!moving && !enteringOrbit) return;
 
-        if (!moving) return;
-
-
-
+        // Arrive at target star
         if (arrivedAtStarCentre) {
             arrivedAtStarCentre = false;
             currentStar = targetStar;
-            double time = System.nanoTime();
-            System.out.println("arrived at " + currentStar.name + " at " + time);
+            startingStarForLeg = currentStar;
 
-
-            //if there is currently no combat at the star then you are the first and defending
-            if (currentStar.orbitController == null || currentStar.orbitController == this.faction) {
-                currentStar.orbitController = this.getFaction(); // First arrival
+            if (currentStar.orbitController == null || currentStar.orbitController == faction) {
+                currentStar.orbitController = faction;
                 this.defending = true;
-            } else {
-                this.defending = false; // Not the first faction
-            }
+            } else this.defending = false;
 
-            if (!gamePanel.visitedStars.contains(currentStar)) {
-                    gamePanel.visitedStars.add(currentStar);
-
-                if (currentStar.quality == Star.Quality.RICH) {
-                    gamePanel.ui.addMessage("Discovered a " + currentStar.quality + " star", "green");
-                } else {
-                    gamePanel.ui.addMessage("Discovered a " + currentStar.quality + " star");
-                }
-
-
+            if (faction == Faction.PLAYER && !gamePanel.humanPlayer.getVisitedStars().contains(currentStar))
+                gamePanel.humanPlayer.addVisitedStar(currentStar);
+            if (faction == Faction.ENEMY && !gamePanel.ai.visitedStars.contains(currentStar)) {
+                gamePanel.ai.visitedStars.add(currentStar);
+                gamePanel.ai.exploredStarQualities.put(currentStar.quality,
+                        gamePanel.ai.exploredStarQualities.get(currentStar.quality) + 1);
             }
 
             jumpIndex++;
@@ -139,7 +148,7 @@ public class Ship extends Entity {
             } else {
                 targetStar = null;
                 enteringOrbit = true;
-                assignOrbitOffset();
+                moveToOrbit();
                 return;
             }
         }
@@ -149,97 +158,83 @@ public class Ship extends Entity {
             return;
         }
 
-        if (targetStar != null) {
-            int tx = (int) targetStar.x;
-            int ty = (int) targetStar.y;
-
-            if (moveTowards(tx, ty)) {
-                arrivedAtStarCentre = true;
-            }
+        if (targetStar != null && moveTowards(targetStar.x, targetStar.y)) {
+            arrivedAtStarCentre = true;
         }
     }
 
-    private boolean moveTowards(int tx, int ty) {
+    /** Move towards a position */
+    private boolean moveTowards(double tx, double ty) {
         double dx = tx - exactCentreX;
         double dy = ty - exactCentreY;
-        double distance = Math.sqrt(dx * dx + dy * dy);
-
+        double dist = Math.sqrt(dx * dx + dy * dy);
         double scaledSpeed = speed * gamePanel.gameClock.gameSpeed;
-        if (scaledSpeed == 0) return false;  // Game paused, do nothing
 
-        if (distance <= scaledSpeed) {
+        if (dist <= scaledSpeed) {
             setCentrePosition(tx, ty);
             return true;
-        } else {
-            double angle = Math.atan2(dy, dx);
-            double deltaX = scaledSpeed * Math.cos(angle);
-            double deltaY = scaledSpeed * Math.sin(angle);
-            setCentrePosition(exactCentreX + deltaX, exactCentreY + deltaY);
-            facingLeft = dx < 0;
-            return false;
         }
+
+        double factor = scaledSpeed / dist;
+        setCentrePosition(exactCentreX + dx * factor, exactCentreY + dy * factor);
+        facingLeft = dx < 0;
+        return false;
     }
 
+    /** Move ship into orbit around current star */
     private void moveToOrbit() {
-        int orbitX = (int) currentStar.x + orbitOffsetX;
-        int orbitY = (int) currentStar.y + orbitOffsetY;
+        if (currentStar == null) return;
 
-        if (moveTowards(orbitX, orbitY)) {
-            setCentrePosition(orbitX, orbitY);
+        if (!currentStar.orbitingShips.contains(this)) {
+            currentStar.orbitingShips.add(this);
+            currentStar.orbitManager.addShip(this);
+        }
+
+        int targetX = currentStar.orbitManager.getTargetX(this);
+        int targetY = currentStar.orbitManager.getTargetY(this);
+
+        if (moveTowards(targetX, targetY)) {
             inOrbit = true;
             moving = false;
             enteringOrbit = false;
-            jumpPath.clear();
-            jumpIndex = 0;
         }
     }
 
-    public void assignOrbitOffset() {
-        int offsetY = defaultOrbitOffsetY;
-        int offsetX = defaultOrbitOffsetX;
-
-        // Flip X offset if in combat
-//        System.out.println("has enemy: " + currentStar.hasCombat);
-//        if (currentStar != null &&  currentStar.hasCombat) {
-//            System.out.println("flipped!");
-//            offsetX = -defaultOrbitOffsetX;
-//        }
-
-        for (Ship ship : gamePanel.getShips()) {
-            if (ship != this && ship.currentStar == this.currentStar && (ship.inOrbit || ship.enteringOrbit)) {
-                if (!ship.name.equals("Colony Ship") && !this.name.equals("Colony Ship")) {
-                    offsetY += ship.solidArea.height + 5;
-                } else if (ship.name.equals("Colony Ship") && this.name.equals("Colony Ship")) {
-                    offsetY -= ship.solidArea.height + 2;
-                }
-            }
-        }
-
-        this.orbitOffsetX = offsetX;
-        this.orbitOffsetY = offsetY;
-    }
-
-
+    /** Enter orbit immediately (used for initial placement) */
     public void enterOrbit(Star star) {
         this.currentStar = star;
         this.inOrbit = true;
-        assignOrbitOffset();
 
-        if (!star.orbitingShips.contains(this)) {
-            star.orbitingShips.add(this);
-        }
+        if (!star.orbitingShips.contains(this)) star.orbitingShips.add(this);
+        star.orbitManager.addShip(this);
 
-        setCentrePosition(star.x + orbitOffsetX, star.y + orbitOffsetY);
+        setCentrePosition(star.orbitManager.getTargetX(this),
+                star.orbitManager.getTargetY(this));
     }
 
+    /** Efficiently draw ship */
     @Override
     public void draw(Graphics2D g2) {
         BufferedImage image = facingLeft ? left1 : right1;
 
-        if (this.faction.equals(Faction.PLAYER))
-            g2.setColor(Color.GREEN);
-        else
-            g2.setColor(Color.RED);
+        int imgX = (int) Math.round(exactCentreX - (solidArea.width / 2.0));
+        int imgY = (int) Math.round(exactCentreY - (solidArea.height / 2.0));
+
+        // Draw image if available
+        if (image != null) {
+            g2.drawImage(image, imgX, imgY, solidArea.width, solidArea.height, null);
+        } else {
+            // fallback visible representation (filled rectangle)
+            if (faction == null) g2.setColor(Color.GRAY);
+            else if (faction == Faction.PLAYER) g2.setColor(Color.GREEN);
+            else g2.setColor(Color.RED);
+
+            g2.fillRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
+        }
+
+        if (faction == null) g2.setColor(Color.GRAY);
+        else if (faction == Faction.PLAYER) g2.setColor(Color.GREEN);
+        else g2.setColor(Color.RED);
 
         g2.drawRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
 
@@ -247,59 +242,13 @@ public class Ship extends Entity {
             g2.setColor(Color.BLUE);
             g2.drawRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
         }
-
-        // Optional dotted jump path line
-        if (currentStar != null && targetStar != null) {
-            Stroke oldStroke = g2.getStroke();
-            g2.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5, 5}, 0));
-            g2.setColor(Color.BLUE);
-            g2.drawLine((int) currentStar.x, (int) currentStar.y, (int) targetStar.x, (int) targetStar.y);
-            g2.setStroke(oldStroke);
-        }
-
-        if (debug) {
-            g2.setColor(Color.YELLOW);
-            g2.draw(new Rectangle(worldX, worldY, gamePanel.TILE_SIZE, gamePanel.TILE_SIZE));
-        }
-
-        g2.drawImage(image, worldX, worldY, gamePanel.TILE_SIZE, gamePanel.TILE_SIZE, null);
     }
 
-
-    public static void recalculateOrbitOffsetsAt(GamePanel gamePanel, Star star) {
-        List<Ship> ships = gamePanel.getShipsOrbitingStar(star);
-        int downOffset = 0;
-        int upOffset = 0;
-
-        for (Ship ship : ships) {
-            ship.orbitOffsetX = ship.defaultOrbitOffsetX;
-
-            if (ship.name.equals("Colony Ship")) {
-                ship.orbitOffsetY = ship.defaultOrbitOffsetY + upOffset;
-                upOffset -= ship.solidArea.height + 2;
-            } else {
-                ship.orbitOffsetY = ship.defaultOrbitOffsetY + downOffset;
-                downOffset += ship.solidArea.height + 5;
-            }
-
-            ship.setCentrePosition(star.x + ship.orbitOffsetX, star.y + ship.orbitOffsetY);
-        }
-    }
-
-
-
+    /** Setup solid area */
     public void setupSolidArea(int width, int height) {
         this.solidArea.width = width;
         this.solidArea.height = height;
-
-        // Automatically update solidArea position based on current offsets
         this.solidArea.x = this.worldX + solidOffsetX;
         this.solidArea.y = this.worldY + solidOffsetY;
     }
-
-
-
-
-
-
 }

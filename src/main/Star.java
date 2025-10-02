@@ -14,7 +14,8 @@ public class Star {
     public Ellipse2D combatButton;
 
     public enum Faction { PLAYER, ENEMY }
-    public Faction faction;
+    public Entity.Faction coloniserFaction = null;
+    public int defences;
 
     public String name;
     public float x, y;
@@ -26,29 +27,27 @@ public class Star {
     public Station station = null;
     double colonisationTimer = 0;
     double colonisationStartDate = -1;
-    int owner = -1;
+    Entity.Faction owner;
     public ArrayList<StationaryEntity> satellites = new ArrayList<>();
     public long population = 0;
     public Ship.Faction orbitController = null;
     public boolean hasCombat = false;
     public boolean recentCombat = false;
     public int battleCounter;
+    public Rectangle combatHitbox = null;
+    public OrbitManager orbitManager;
 
     public void updateColonisation(GameClock gameClock, UI ui) {
         if (this.colonised == Colonised.BEGUN) {
-//            System.out.println("total game days passed: " + gameClock.getTotalGameDays());
-//            System.out.println("total colonised days passed: " + (gameClock.getTotalGameDays() - this.colonisationStartDate));
-
             if (this.colonisationStartDate < 0) {
                 this.colonisationStartDate = gameClock.getTotalGameDays();
             }
 
-//                if (star.colonisationTimer >= 7.0) {
             if (gameClock.getTotalGameDays() - this.colonisationStartDate >= 180 ) {
                 this.colonised = Colonised.COLONISED;
                 this.population = 200_000;
-                ui.addMessage("Colonisation of " + this.name + " complete.", "green");
-                owner = 1;
+                this.owner = coloniserFaction;
+                ui.addMessage("Colonisation of " + this.name + " complete by " + this.owner, "green");
             }
         }
     }
@@ -84,19 +83,20 @@ public class Star {
     public BufferedImage overlay;
 
 
-    public Star(String name, float x, float y) {
+    public Star(String name, float x, float y, GamePanel gamePanel) {
+        orbitManager = new OrbitManager(gamePanel, this);
         this.name = name;
         this.x = x;
         this.y = y;
         this.connections = new ArrayList<>();
-        int hitboxSize = 24; // Increase this as needed for better click accuracy
-
+        int hitboxSize = 24;
+        defences = 0;
         battleCounter = 0;
         // Centre the hitbox around (x, y)
         int hitboxX = (int) x - hitboxSize / 2;
         int hitboxY = (int) y - hitboxSize / 2;
 
-        solidArea = new Rectangle(hitboxX, hitboxY, hitboxSize, hitboxSize);
+        solidArea = new Rectangle(hitboxX -10 , hitboxY - 10, hitboxSize + 20, hitboxSize + 20);
         solidAreaDefaultX = solidArea.x;
         solidAreaDefaultY = solidArea.y;
 

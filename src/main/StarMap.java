@@ -1,5 +1,7 @@
 package main;
 
+import entity.Entity;
+
 import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
@@ -47,7 +49,7 @@ public void loadFromFile(String filename) throws IOException {
         String name = tokens[1];
         float x = Float.parseFloat(tokens[2]);
         float y = Float.parseFloat(tokens[3]);
-        stars.put(name, new Star(name, x, y));
+        stars.put(name, new Star(name, x, y, gamePanel));
     }
 
     private void connectStar(String line) {
@@ -102,7 +104,7 @@ public void loadFromFile(String filename) throws IOException {
                     }
                 }
 
-                Set<Star> visitedSnapshot = new HashSet<>(gamePanel.visitedStars); // or use List if that's the type
+                Set<Star> visitedSnapshot = new HashSet<>(gamePanel.humanPlayer.getVisitedStars()); // or use List if that's the type
 
                 // Draw stars (nodes)
                 for (Star star : this.getStars()) {
@@ -110,7 +112,7 @@ public void loadFromFile(String filename) throws IOException {
 
 
 
-                    if (visitedSnapshot.contains(star)) {
+                    if (visitedSnapshot.contains(star) || (gamePanel.ai.visitedStars.contains(star) && gamePanel.ai.debug)) {
                         switch (star.quality) {
                             case UNINHABITABLE:
                                 g2.setColor(Color.GRAY);
@@ -143,7 +145,21 @@ public void loadFromFile(String filename) throws IOException {
                             g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
 
 
+                            int rectSize = 40; // slightly larger than max circle diameter (36)
+                            int rectX = (int) (star.x + 30 - rectSize / 2);
+                            int rectY = (int) (star.y + 30 - rectSize / 2);
+
+                            star.combatHitbox = new Rectangle(rectX, rectY, rectSize, rectSize);
+
+                            // Debug: draw rectangle outline
+                            g2.setColor(Color.MAGENTA);
+                            g2.drawRect(star.combatHitbox.x, star.combatHitbox.y,
+                                    star.combatHitbox.width, star.combatHitbox.height);
+
+
                         } else if (star.recentCombat) {
+
+                            /*
                             int circleX = (int) (star.x + 30 - flashRadius);
                             int circleY = (int) (star.y + 30 - flashRadius);
 
@@ -159,26 +175,29 @@ public void loadFromFile(String filename) throws IOException {
                                 }
                             }
 
-                            g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
+                            //if there's combat then results are hidden to prioritise ongoing combat
+                                g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
+
+                             */
                         }
                     } else {
                         g2.setColor(new Color(133, 121, 121));
                     }
 
-                    if (this.colonisedStars.contains(star)) {
+                    if (this.colonisedStars.contains(star) || (gamePanel.ai.colonisedStars.contains(star) && gamePanel.ai.debug)) {
                         switch (star.colonised) {
                             case UNCOLONISED:
 //                            g2.setColor(Color.GRAY);
                                 break;
                             case BEGUN:
-                                if (star.owner == 1)
+                                if (star.owner == Entity.Faction.PLAYER)
                                     g2.setColor(new Color(79, 118, 214));
                                 else
                                     g2.setColor(new Color(159, 56, 56));
                                 break;
                             case COLONISED:
 
-                                if (star.owner == 1) {
+                                if (star.owner == Entity.Faction.PLAYER) {
                                     int ovalDiameter = 22;
                                     g2.setColor(new Color(5, 211, 18, 255));
                                     g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
@@ -194,8 +213,8 @@ public void loadFromFile(String filename) throws IOException {
 
 
                                     g2.setColor(gamePanel.blueColour);
-                                } else if (star.owner == 2) {
-                                    if (visitedSnapshot.contains(star)) {
+                                } else if (star.owner == Entity.Faction.ENEMY) {
+                                    if (visitedSnapshot.contains(star) || gamePanel.ai.debug) {
                                         int ovalDiameter = 22;
                                         g2.setColor(new Color(255, 2, 2, 255));
                                         g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
@@ -227,7 +246,7 @@ public void loadFromFile(String filename) throws IOException {
                     float planetScale = (float) ovalDiameter / 32;
                     g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
                     String str;
-                    if (gamePanel.visitedStars.contains(star)) {
+                    if (gamePanel.humanPlayer.getVisitedStars().contains(star)) {
 
 
                         if (star.colonised.equals(Star.Colonised.COLONISED)) {
