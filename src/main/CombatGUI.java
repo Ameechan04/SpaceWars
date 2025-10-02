@@ -95,6 +95,8 @@ public class CombatGUI {
 
         System.out.println("drawing combat!");
 
+        starName = manager.starName;
+        battleCount = manager.battleCounter;
         g2.setColor(backGroundColor);
         g2.fill(combatPanelBackground);
         g2.setColor(Color.WHITE); // border colour

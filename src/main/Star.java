@@ -13,7 +13,6 @@ public class Star {
     public boolean combatVisible;
     public Ellipse2D combatButton;
 
-    public enum Faction { PLAYER, ENEMY }
     public Entity.Faction coloniserFaction = null;
     public int defences;
 
