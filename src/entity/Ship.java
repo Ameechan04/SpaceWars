@@ -1,10 +1,11 @@
 package entity;
 
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import main.GamePanel;
 import main.Star;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -214,41 +215,41 @@ public class Ship extends Entity {
 
     /** Efficiently draw ship */
     @Override
-    public void draw(Graphics2D g2) {
-        BufferedImage image = facingLeft ? left1 : right1;
+    public void draw(GraphicsContext gc) {
+        Image image = facingLeft ? left1 : right1;
 
-        int imgX = (int) Math.round(exactCentreX - (solidArea.width / 2.0));
-        int imgY = (int) Math.round(exactCentreY - (solidArea.height / 2.0));
+        int imgX = (int) Math.round(exactCentreX - (solidArea.getWidth() / 2.0));
+        int imgY = (int) Math.round(exactCentreY - (solidArea.getHeight() / 2.0));
 
         // Draw image if available
         if (image != null) {
-            g2.drawImage(image, imgX, imgY, solidArea.width, solidArea.height, null);
+            gc.drawImage(image, imgX, imgY, solidArea.getWidth(), solidArea.getHeight());
         } else {
             // fallback visible representation (filled rectangle)
-            if (faction == null) g2.setColor(Color.GRAY);
-            else if (faction == Faction.PLAYER) g2.setColor(Color.GREEN);
-            else g2.setColor(Color.RED);
+            if (faction == null) gc.setStroke(Color.GRAY);
+            else if (faction == Faction.PLAYER) gc.setStroke(Color.GREEN);
+            else gc.setStroke(Color.RED);
 
-            g2.fillRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
+            gc.fillRect(solidArea.getX(), solidArea.getY(), solidArea.getWidth(), solidArea.getHeight());
         }
 
-        if (faction == null) g2.setColor(Color.GRAY);
-        else if (faction == Faction.PLAYER) g2.setColor(Color.GREEN);
-        else g2.setColor(Color.RED);
+        if (faction == null) gc.setStroke(Color.GRAY);
+        else if (faction == Faction.PLAYER) gc.setStroke(Color.GREEN);
+        else gc.setStroke(Color.RED);
 
-        g2.drawRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
+        gc.strokeRect(solidArea.getX(), solidArea.getY(), solidArea.getWidth(), solidArea.getHeight());
 
         if (selected) {
-            g2.setColor(Color.BLUE);
+            gc.setColor(Color.BLUE);
             g2.drawRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
         }
     }
 
     /** Setup solid area */
     public void setupSolidArea(int width, int height) {
-        this.solidArea.width = width;
-        this.solidArea.height = height;
-        this.solidArea.x = this.worldX + solidOffsetX;
-        this.solidArea.y = this.worldY + solidOffsetY;
+        this.solidArea.setWidth(width);
+        this.solidArea.setHeight(height);
+        this.solidArea.setX(this.worldX + solidOffsetX);
+        this.solidArea.setY(this.worldY + solidOffsetY);
     }
 }

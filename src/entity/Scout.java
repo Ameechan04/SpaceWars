@@ -1,5 +1,6 @@
 package entity;
 
+import javafx.scene.image.Image;
 import main.GamePanel;
 import main.Star;
 
@@ -23,9 +24,9 @@ public class Scout extends Ship {
 
     public void getShipImage() {
         try {
-            left1 = ImageIO.read(getClass().getResourceAsStream("/units/ScoutShipLeft.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/units/ScoutShipRight.png"));
-        } catch (IOException e) {
+            left1 = new javafx.scene.image.Image(getClass().getResourceAsStream("/units/ScoutShipLeft.png"));
+            right1 = new Image(getClass().getResourceAsStream("/units/ScoutShipRight.png"));
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

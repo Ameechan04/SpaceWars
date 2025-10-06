@@ -1,11 +1,11 @@
 package entity;
 
+import javafx.scene.image.Image;
+import javafx.scene.shape.Rectangle;
 import main.GamePanel;
 import main.KeyHandler;
 import main.Star;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
 import java.io.IOException;
 
 public class ColonyShip extends Ship{
@@ -27,11 +27,10 @@ public class ColonyShip extends Ship{
 
 
     public void getShipImage() {
-
         try {
-            left1 = ImageIO.read(getClass().getResourceAsStream("/units/ColonyShipLeft.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/units/ColonyShipRight.png"));
-        }catch (IOException e){
+            left1 = new Image(getClass().getResourceAsStream("/units/ColonyShipLeft.png"));
+            right1 = new Image(getClass().getResourceAsStream("/units/ColonyShipRight.png"));
+        }catch (Exception e){
             e.printStackTrace();
         }
     }

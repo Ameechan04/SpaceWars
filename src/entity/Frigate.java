@@ -1,5 +1,6 @@
 package entity;
 
+import javafx.scene.image.Image;
 import main.GamePanel;
 import main.Star;
 
@@ -24,9 +25,9 @@ public class Frigate extends Ship{
     public void getShipImage() {
 
         try {
-            left1 = ImageIO.read(getClass().getResourceAsStream("/units/FrigateShipLeft.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/units/FrigateShipRight.png"));
-        }catch (IOException e){
+            left1 = new javafx.scene.image.Image(getClass().getResourceAsStream("/units/FrigateShipLeft.png"));
+            right1 = new Image(getClass().getResourceAsStream("/units/FrigateShipRight.png"));
+        }catch (Exception e){
             e.printStackTrace();
         }
     }

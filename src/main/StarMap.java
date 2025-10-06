@@ -1,10 +1,11 @@
 package main;
 
 import entity.Entity;
+import javafx.scene.canvas.GraphicsContext;
 
-import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.BufferedImage;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
@@ -75,214 +76,102 @@ public void loadFromFile(String filename) throws IOException {
         return stars.get(name);
     }
 
-    public void draw(Graphics2D g2) {
+    public void draw(GraphicsContext gc) {
+        // Draw connections (edges)
+        gc.setLineWidth(8);
+        for (Star star : getStars()) {
+            for (Star connected : star.connections) {
+                // faint outer glow
+                gc.setStroke(Color.rgb(255, 255, 255, 0.12));
+                gc.strokeLine(star.x, star.y, connected.x, connected.y);
+
+                // mid glow
+                gc.setLineWidth(4);
+                gc.setStroke(Color.rgb(255, 255, 255, 0.29));
+                gc.strokeLine(star.x, star.y, connected.x, connected.y);
+
+                // core beam
+                gc.setLineWidth(1);
+                gc.setStroke(Color.rgb(255, 255, 255, 1.0));
+
+                gc.strokeLine(star.x, star.y, connected.x, connected.y);
+            }
+        }
+
+        Set<Star> visitedSnapshot = new HashSet<>(gamePanel.humanPlayer.getVisitedStars());
+
+        for (Star star : getStars()) {
+            // Determine star color based on quality
+            Color starColor = switch (star.quality) {
+                case UNINHABITABLE -> Color.rgb(255, 255, 255, 0.12);
+                case BARREN -> Color.rgb(119, 79, 41);
+                case POOR -> Color.rgb(188, 3, 3);
+                case MEDIUM -> Color.rgb(204, 201, 20);
+                case RICH -> Color.rgb(7, 165, 17);
+            };
+            gc.setStroke(starColor);
 
 
-                // Draw connections (edges)
-                g2.setColor(new Color(255, 255, 255));
+            if (!visitedSnapshot.contains(star) && !(gamePanel.ai.visitedStars.contains(star) && gamePanel.ai.debug)) {
+                starColor = Color.GRAY;
+            }
 
+            // Combat flashing circle
+            if (star.hasCombat) {
+                star.combatVisible = true;
+                double circleX = star.x + 30 - flashRadius;
+                double circleY = star.y + 30 - flashRadius;
+                gc.setFill(Color.WHITE);
+                gc.fillOval(circleX, circleY, flashRadius * 2, flashRadius * 2);
 
+                int rectSize = 40;
+                star.combatHitbox = new Rectangle((int) (star.x + 30 - rectSize / 2),
+                        (int) (star.y + 30 - rectSize / 2), rectSize, rectSize);
+                gc.setStroke(Color.MAGENTA);
+                gc.strokeRect(star.combatHitbox.getX(), star.combatHitbox.getY(),
+                        star.combatHitbox.getWidth(), star.combatHitbox.getHeight());
+            }
 
-
-
-                for (Star star : this.getStars()) {
-                    for (Star connected : star.connections) {
-
-
-                        g2.setColor(new Color(255, 255, 255, 31)); // faint outer glow
-                        g2.setStroke(new BasicStroke(8));
-                        g2.drawLine((int) star.x, (int) star.y, (int) connected.x, (int) connected.y);
-
-                        g2.setColor(new Color(255, 255, 255, 74)); // mid glow
-                        g2.setStroke(new BasicStroke(4));
-                        g2.drawLine((int) star.x, (int) star.y, (int) connected.x, (int) connected.y);
-
-                        g2.setColor(new Color(255, 255, 255)); // core beam
-                        g2.setStroke(new BasicStroke(1));
-                        g2.drawLine((int) star.x, (int) star.y, (int) connected.x, (int) connected.y);
-
+            // Colonisation overlay
+            switch (star.colonised) {
+                case COLONISED -> {
+                    if (star.owner == Entity.Faction.PLAYER) {
+                        gc.setFill(Color.rgb(5, 211, 18, 1.0));
+                    } else if (star.owner == Entity.Faction.ENEMY && (visitedSnapshot.contains(star) || gamePanel.ai.debug)) {
+                        gc.setFill(Color.rgb(255, 2, 2, 1.0));
                     }
                 }
-
-                Set<Star> visitedSnapshot = new HashSet<>(gamePanel.humanPlayer.getVisitedStars()); // or use List if that's the type
-
-                // Draw stars (nodes)
-                for (Star star : this.getStars()) {
-
-
-
-
-                    if (visitedSnapshot.contains(star) || (gamePanel.ai.visitedStars.contains(star) && gamePanel.ai.debug)) {
-                        switch (star.quality) {
-                            case UNINHABITABLE:
-                                g2.setColor(Color.GRAY);
-                                break;
-                            case BARREN:
-                                g2.setColor(new Color(119, 79, 41));
-                                break;
-                            case POOR:
-                                g2.setColor(new Color(188, 3, 3));
-                                break;
-                            case MEDIUM:
-                                g2.setColor(new Color(204, 201, 20));
-                                break;
-                            case RICH:
-                                g2.setColor(new Color(7, 165, 17));
-                                break;
-
-
-                        }
-
-
-                        //combat alert animation
-                        if (star.hasCombat) {
-                            star.combatVisible = true;
-                            int circleX = (int) (star.x + 30 - flashRadius);
-                            int circleY = (int) (star.y + 30 - flashRadius);
-
-                            float diameter = flashRadius * 2;
-                            g2.setColor(Color.WHITE);
-                            g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
-
-
-                            int rectSize = 40; // slightly larger than max circle diameter (36)
-                            int rectX = (int) (star.x + 30 - rectSize / 2);
-                            int rectY = (int) (star.y + 30 - rectSize / 2);
-
-                            star.combatHitbox = new Rectangle(rectX, rectY, rectSize, rectSize);
-
-                            // Debug: draw rectangle outline
-                            g2.setColor(Color.MAGENTA);
-                            g2.drawRect(star.combatHitbox.x, star.combatHitbox.y,
-                                    star.combatHitbox.width, star.combatHitbox.height);
-
-
-                        } else if (star.recentCombat) {
-
-                            /*
-                            int circleX = (int) (star.x + 30 - flashRadius);
-                            int circleY = (int) (star.y + 30 - flashRadius);
-
-                            float diameter = flashRadius * 2;
-                            for (CombatManager combatManager : gamePanel.activeCombats) {
-                                if (combatManager.star.name.equals(star.name)) {
-                                    if (combatManager.playerWon()) {
-                                        g2.setColor(Color.GREEN);
-                                    } else {
-                                        g2.setColor(Color.RED);
-                                    }
-                                    break;
-                                }
-                            }
-
-                            //if there's combat then results are hidden to prioritise ongoing combat
-                                g2.fillOval(circleX, circleY, (int) diameter, (int) diameter);
-
-                             */
-                        }
-                    } else {
-                        g2.setColor(new Color(133, 121, 121));
-                    }
-
-                    if (this.colonisedStars.contains(star) || (gamePanel.ai.colonisedStars.contains(star) && gamePanel.ai.debug)) {
-                        switch (star.colonised) {
-                            case UNCOLONISED:
-//                            g2.setColor(Color.GRAY);
-                                break;
-                            case BEGUN:
-                                if (star.owner == Entity.Faction.PLAYER)
-                                    g2.setColor(new Color(79, 118, 214));
-                                else
-                                    g2.setColor(new Color(159, 56, 56));
-                                break;
-                            case COLONISED:
-
-                                if (star.owner == Entity.Faction.PLAYER) {
-                                    int ovalDiameter = 22;
-                                    g2.setColor(new Color(5, 211, 18, 255));
-                                    g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-
-                                    ovalDiameter = 25;
-                                    g2.setColor(new Color(5, 211, 18, 137));
-                                    g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-
-
-                                    ovalDiameter = 30;
-                                    g2.setColor(new Color(5, 211, 18, 52));
-                                    g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-
-
-                                    g2.setColor(gamePanel.blueColour);
-                                } else if (star.owner == Entity.Faction.ENEMY) {
-                                    if (visitedSnapshot.contains(star) || gamePanel.ai.debug) {
-                                        int ovalDiameter = 22;
-                                        g2.setColor(new Color(255, 2, 2, 255));
-                                        g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-
-                                        ovalDiameter = 25;
-                                        g2.setColor(new Color(255, 0, 0, 134));
-                                        g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-
-
-                                        ovalDiameter = 30;
-                                        g2.setColor(new Color(255, 0, 0, 45));
-                                        g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-
-                                        g2.setColor(new Color(58, 8, 8, 255));
-
-                                    } else {
-                                        g2.setColor(new Color(133, 121, 121));
-                                    }
-
-                                }
-                                break;
-                            case ABANDONED:
-                                g2.setColor(new Color(42, 42, 62));
-                                break;
-                        }
-                    }
-
-                    int ovalDiameter = 20;
-                    float planetScale = (float) ovalDiameter / 32;
-                    g2.fillOval((int) star.x - (ovalDiameter / 2), (int) star.y - (ovalDiameter / 2), ovalDiameter, ovalDiameter);
-                    String str;
-                    if (gamePanel.humanPlayer.getVisitedStars().contains(star)) {
-
-
-                        if (star.colonised.equals(Star.Colonised.COLONISED)) {
-                            g2.setColor(Color.GREEN);
-                        } else {
-                            g2.setColor(Color.white);
-
-                        }
-                        str = star.name;
-
-                    } else {
-                        g2.setColor(Color.gray);
-                        str = "???";
-                    }
-                    g2.drawString(str, (int) star.x + 15, (int) star.y);
-
-                    if (star.selected) {
-                        g2.setStroke(new BasicStroke(3));
-                        g2.setColor(Color.GREEN);
-                        g2.drawRect(star.solidAreaDefaultX, star.solidAreaDefaultY, star.solidArea.width, star.solidArea.height);
-
-                    }
-                    g2.setStroke(new BasicStroke(1));
-
-
-                    if (star.overlay != null) {
-
-                        int drawX = (int) star.x - ovalDiameter / 2;
-                        int drawY = (int) star.y - ovalDiameter / 2;
-
-                        //overlay slightly off centre so corrected
-                        g2.drawImage(star.overlay, drawX, drawY, ovalDiameter + ((int) planetScale), ovalDiameter + ((int) planetScale), null);
-                    }
-
+                case BEGUN -> {
+                    gc.setFill(star.owner == Entity.Faction.PLAYER ? Color.rgb(79, 118, 214) : Color.rgb(159, 56, 56));
                 }
+                case ABANDONED -> gc.setFill(Color.rgb(42, 42, 62));
+            }
 
+            // Draw main star circle
+            double ovalDiameter = 20;
+            gc.setFill(starColor);
+            gc.fillOval(star.x - ovalDiameter / 2, star.y - ovalDiameter / 2, ovalDiameter, ovalDiameter);
+
+            // Draw star name
+            String label = visitedSnapshot.contains(star) ? star.name : "???";
+            gc.setFill(visitedSnapshot.contains(star) ? Color.WHITE : Color.GRAY);
+            gc.fillText(label, star.x + 15, star.y);
+
+            // Selection rectangle
+            if (star.selected) {
+                gc.setLineWidth(3);
+                gc.setStroke(Color.GREEN);
+                gc.strokeRect(star.solidAreaDefaultX, star.solidAreaDefaultY, star.solidArea.getWidth(), star.solidArea.getHeight());
+                gc.setLineWidth(1);
+            }
+
+            // Overlay image
+            if (star.overlay != null) {
+                double drawX = star.x - ovalDiameter / 2;
+                double drawY = star.y - ovalDiameter / 2;
+                gc.drawImage(star.overlay, drawX, drawY, ovalDiameter, ovalDiameter);
+            }
+        }
     }
 
     public List<Star> findShortestPath(Star start, Star goal) {
@@ -320,7 +209,7 @@ public void loadFromFile(String filename) throws IOException {
         return path;
     }
 
-    public void assignStarOverlays(BufferedImage[] overlays) {
+    public void assignStarOverlays(Image[] overlays) {
         Random rand = new Random();
 
         for (Star star : getStars()) {
@@ -342,16 +231,16 @@ public void loadFromFile(String filename) throws IOException {
 
             // Choose randomly from available overlays
             if (available.isEmpty()) {
-                // All options used by neighbours, just pick randomly (violation allowed)
+                // All options used by neighbours, just pick randomly
                 star.overlayIndex = rand.nextInt(overlays.length);
             } else {
                 star.overlayIndex = available.get(rand.nextInt(available.size()));
             }
 
+            // Assign JavaFX Image directly
             star.overlay = overlays[star.overlayIndex];
         }
     }
-
     public void updateFlashingCircle() {
         flashRadius += flashDelta;
         if (flashRadius >= FLASH_MAX || flashRadius <= FLASH_MIN) {

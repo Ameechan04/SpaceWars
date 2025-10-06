@@ -1,10 +1,11 @@
 package entity;
 
+import javafx.scene.image.Image;
+import javafx.scene.shape.Rectangle;
 import main.GamePanel;
 import main.Star;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.io.IOException;
 
 public class BasicShipyard extends Station{
@@ -24,11 +25,10 @@ public class BasicShipyard extends Station{
 
 
     public void getImage() {
-
         try {
-            left1 = ImageIO.read(getClass().getResourceAsStream("/units/ShipyardStation.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/units/ShipyardStation.png"));
-        }catch (IOException e){
+            left1 = new Image(getClass().getResourceAsStream("/units/ShipyardStation.png"));
+            right1 = new Image(getClass().getResourceAsStream("/units/ShipyardStation.png"));
+        }catch (Exception e){
             e.printStackTrace();
         }
     }

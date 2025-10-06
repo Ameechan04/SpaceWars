@@ -1,5 +1,6 @@
 package entity;
 
+import javafx.scene.image.Image;
 import main.GamePanel;
 import main.Star;
 
@@ -50,6 +51,8 @@ public class SmallSatellite extends StationaryEntity {
     public void getImage() {
 
         try {
+            left1 = new javafx.scene.image.Image(getClass().getResourceAsStream("/units/ColonyShipLeft.png"));
+            right1 = new Image(getClass().getResourceAsStream("/units/ColonyShipRight.png"));
             left1 = ImageIO.read(getClass().getResourceAsStream("/units/SmallSatellite.png"));
             right1 = ImageIO.read(getClass().getResourceAsStream("/units/SmallSatellite.png"));
         }catch (IOException e){

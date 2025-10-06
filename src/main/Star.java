@@ -1,17 +1,17 @@
 package main;
 
 import entity.*;
+import javafx.scene.image.Image;
+import javafx.scene.shape.Ellipse;
+import javafx.scene.shape.Rectangle;
 
-import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class Star {
     public boolean combatVisible;
-    public Ellipse2D combatButton;
+    public Ellipse combatButton;
 
     public Entity.Faction coloniserFaction = null;
     public int defences;
@@ -46,7 +46,7 @@ public class Star {
                 this.colonised = Colonised.COLONISED;
                 this.population = 200_000;
                 this.owner = coloniserFaction;
-                ui.addMessage("Colonisation of " + this.name + " complete by " + this.owner, "green");
+//                ui.addMessage("Colonisation of " + this.name + " complete by " + this.owner, "green");
             }
         }
     }
@@ -54,7 +54,7 @@ public class Star {
 
     public void updateCombatButton() {
         if (hasCombat && combatVisible) {
-            combatButton = new Ellipse2D.Double(this.x + 2, this.y + 2, 40, 40);
+            combatButton = new Ellipse(this.x + 2, this.y + 2, 40, 40);
         }
 
     }
@@ -79,7 +79,7 @@ public class Star {
     public Quality quality;
 
     public int overlayIndex = -1; // index from 0 to 4
-    public BufferedImage overlay;
+    public Image overlay;
 
 
     public Star(String name, float x, float y, GamePanel gamePanel) {
@@ -96,8 +96,8 @@ public class Star {
         int hitboxY = (int) y - hitboxSize / 2;
 
         solidArea = new Rectangle(hitboxX -10 , hitboxY - 10, hitboxSize + 20, hitboxSize + 20);
-        solidAreaDefaultX = solidArea.x;
-        solidAreaDefaultY = solidArea.y;
+        solidAreaDefaultX = (int) solidArea.getX();
+        solidAreaDefaultY = (int) solidArea.getY();
 
         quality =  randomisedStarQuality();
     }

@@ -1,33 +1,49 @@
 package main;
 
-import javax.swing.*;
-import java.awt.*;
+import javafx.application.Application;
+import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
+import javafx.stage.Screen;
+import javafx.stage.Stage;
+import javafx.geometry.Rectangle2D;
 
-public class Main {
-    public static void main(String[] args) {
-        JFrame window = new JFrame();
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.setResizable(false);
-        window.setTitle("SpaceWars"); //todo change
-        window.setUndecorated(true);  // Remove title bar and borders
+public class Main extends Application {
 
-        GamePanel gamePanel = new GamePanel();
-        window.add(gamePanel);
-        window.pack(); //set to preferred size of subcomponents
-        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+    private GamePanel gamePanel;
+    private final int WIDTH = 1200;
+    private final int HEIGHT = 800;
 
-        // Set frame to full-screen mode
-        if (gd.isFullScreenSupported()) {
-            gd.setFullScreenWindow(window);
-        } else {
-            // Fallback if full screen not supported: maximize window
-            window.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            window.setVisible(true);
-        }
-        window.setLocationRelativeTo(null);
-        window.setVisible(true);
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("SpaceWars");
 
+        // Root pane
+        Pane root = new Pane();
+
+        // Initialize game logic
+        gamePanel = new GamePanel();
         gamePanel.setUpGame();
+
+        // Add the GamePanel node to the JavaFX scene
+        root.getChildren().add(gamePanel);
+
+        // Set up full-screen using screen bounds
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        primaryStage.setX(screenBounds.getMinX());
+        primaryStage.setY(screenBounds.getMinY());
+        primaryStage.setWidth(screenBounds.getWidth());
+        primaryStage.setHeight(screenBounds.getHeight());
+
+        Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
+        primaryStage.setScene(scene);
+        primaryStage.setFullScreen(true); // optional
+        primaryStage.show();
+
+        // Start the existing game loop inside GamePanel
         gamePanel.startGameThread();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 }

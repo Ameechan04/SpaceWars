@@ -1,13 +1,14 @@
 package entity;
 
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import main.GamePanel;
 import main.Star;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.geom.Ellipse2D;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
+
 
 public class Entity {
 
@@ -20,7 +21,7 @@ public class Entity {
     public boolean inOrbit = true;
     public String name;
     public double exactCentreX, exactCentreY;
-    BufferedImage errorImage;
+    Image errorImage;
 
     public int screenX;
     public int screenY;
@@ -29,7 +30,7 @@ public class Entity {
     public int solidOffsetY;// = worldY;
     public int centreX, centreY;
     public int speed, solidAreaDefaultX, solidAreaDefaultY;
-    public BufferedImage left1, right1;
+    public Image left1, right1;
 
     public String direction;
 
@@ -79,8 +80,8 @@ public class Entity {
     public void updateScreenPosition(double cameraOffsetX, double cameraOffsetY, double zoom) {
         screenX = (int) ((worldX + solidOffsetX - cameraOffsetX) * zoom);
         screenY = (int) ((worldY + solidOffsetY - cameraOffsetY) * zoom);
-        centreX = screenX + solidArea.width / 2;
-        centreY = screenY + solidArea.height / 2;
+        centreX = (int) (screenX + solidArea.getWidth() / 2);
+        centreY = (int) (screenY + solidArea.getHeight() / 2);
     }
 
 
@@ -102,8 +103,8 @@ public class Entity {
 
 
         // sync hit‑box
-        this.solidArea.x = worldX + solidOffsetX;
-        this.solidArea.y = worldY + solidOffsetY;
+        this.solidArea.setX(worldX + solidOffsetX);
+        this.solidArea.setY(worldY + solidOffsetY);
 
 //        System.out.printf("centreX=%d, centreY=%d, worldX=%d, worldY=%d, solidArea=(%d,%d,%d,%d)\n",
 //                this.centreX, this.centreY, this.worldX, this.worldY,
@@ -116,35 +117,42 @@ public class Entity {
     /*override*/
     public void update(){}
 
-    public void draw(Graphics2D g2) {}
+    public void draw(GraphicsContext g) {}
 
     public void getImage() {
         try {
-            errorImage = ImageIO.read(getClass().getResourceAsStream("/units/ErrorLoading.png"));
-            if (errorImage == null) {
+            // Try to load the image from resources
+            errorImage = new Image(getClass().getResourceAsStream("/units/ErrorLoading.png"));
+
+            // If loading failed (e.g., file missing), fallback
+            if (errorImage.isError()) {
                 throw new IOException("ErrorLoading.png not found or failed to load.");
             }
+
             left1 = errorImage;
             right1 = errorImage;
-        } catch (IOException | NullPointerException e) {
+        } catch (Exception e) {
             System.err.println("Failed to load ErrorLoading.png fallback image.");
             e.printStackTrace();
         }
     }
 
     private void loadFallbackImage() {
-        try {
-            BufferedImage errorImage = ImageIO.read(getClass().getResourceAsStream("/units/ErrorLoading.png"));
-            if (errorImage == null) {
-                throw new IOException("ErrorLoading.png not found");
-            }
-            left1 = errorImage;
-            right1 = errorImage;
-        } catch (IOException | NullPointerException e) {
-            System.err.println("Failed to load fallback image ErrorLoading.png");
-            e.printStackTrace();
-        }
+            try {
+                // Try to load the image from resources
+                errorImage = new Image(getClass().getResourceAsStream("/units/ErrorLoading.png"));
 
+                // If loading failed (e.g., file missing), fallback
+                if (errorImage.isError()) {
+                    throw new IOException("ErrorLoading.png not found or failed to load.");
+                }
+
+                left1 = errorImage;
+                right1 = errorImage;
+            } catch (Exception e) {
+                System.err.println("Failed to load ErrorLoading.png fallback image.");
+                e.printStackTrace();
+            }
     }
 
     public int getBuildCost() {
@@ -170,27 +178,26 @@ public class Entity {
 //        this.solidAreaDefaultY = worldY;
 //    }
 
-    public void drawCentrePosition(Graphics2D g2) {
+    public void drawCentrePosition(GraphicsContext gc) {
+        double radius = 2; // match your 2x2 dot
+        double x = this.exactCentreX;
+        double y = this.exactCentreY;
 
-        Ellipse2D centreDot = new Ellipse2D.Double(this.exactCentreX, this.exactCentreY, 2, 2);
-        g2.setColor(Color.ORANGE);
-        g2.fill(centreDot);
-        g2.draw(centreDot);
+        gc.setFill(Color.ORANGE);
+        gc.fillOval(x, y, radius, radius);
+        gc.setStroke(Color.ORANGE);
+        gc.strokeOval(x, y, radius, radius);
     }
 
-    public void drawWorldXY(Graphics2D g2) {
+    public void drawWorldXY(GraphicsContext gc) {
+        double radius = 2;
+        double x = this.worldX;
+        double y = this.worldY;
 
-        Ellipse2D centreDot = new Ellipse2D.Double(this.worldX, this.worldY, 2, 2);
-        g2.setColor(Color.PINK);
-        g2.fill(centreDot);
-        g2.draw(centreDot);
-    }
-
-    public void drawCentreDebug(Graphics2D g2) {
-        g2.setColor(Color.MAGENTA);
-        g2.fillOval((int) Math.round(exactCentreX) - 2,
-                (int) Math.round(exactCentreY) - 2,
-                4, 4);
+        gc.setFill(Color.PINK);
+        gc.fillOval(x, y, radius, radius);
+        gc.setStroke(Color.PINK);
+        gc.strokeOval(x, y, radius, radius);
     }
 
 
