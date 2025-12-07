@@ -51,7 +51,7 @@ public class OrbitManager {
                 Ship representative = group.get(0);
                 if (ship == representative) {
                     ship.orbitOffsetX = ship.defaultOrbitOffsetX;
-                    ship.orbitOffsetY = ship.defaultOrbitOffsetY + i * (ship.solidArea.height + DOWN_SPACING);
+                    ship.orbitOffsetY = (int) (ship.defaultOrbitOffsetY + i * (ship.solidArea.getHeight() + DOWN_SPACING));
                 } else {
                     ship.orbitOffsetX = 0;
                     ship.orbitOffsetY = 0;
@@ -61,7 +61,7 @@ public class OrbitManager {
             } else {
                 // 1-2 ships: normal offset by index
                 ship.orbitOffsetX = ship.defaultOrbitOffsetX;
-                ship.orbitOffsetY = ship.defaultOrbitOffsetY + i * (ship.solidArea.height + DOWN_SPACING);
+                ship.orbitOffsetY = (int) (ship.defaultOrbitOffsetY + i * (ship.solidArea.getHeight() + DOWN_SPACING));
             }
 
             // Update centre position

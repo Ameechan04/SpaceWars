@@ -22,7 +22,7 @@ public class AIDecisionDisplay {
     GamePanel gamePanel;
 
     public AIDecisionDisplay(GamePanel gamePanel, double screenWidth, double screenHeight) {
-        this.SCREEN_WIDTH = screenWidth;
+        this.SCREEN_WIDTH = gamePanel.SCR;
         this.SCREEN_HEIGHT = screenHeight;
         this.gamePanel = gamePanel;
     }

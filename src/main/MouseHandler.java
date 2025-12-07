@@ -80,7 +80,7 @@ public class MouseHandler {
                 return true;
             }
         } else {
-            if (gp.ui.buildBasicShipyardButton != null && gp.ui.buildBasicShipyardButton.contains(e.getX(), e.getY())
+            if (gp.ui.buildShipyardButton != null && gp.ui.buildShipyardButton.contains(e.getX(), e.getY())
                     && star.colonised == Star.Colonised.COLONISED) {
                 if (canAfford("basicshipyard")) {
                     gp.ui.addMessage("Building Basic Shipyard...");
@@ -108,8 +108,8 @@ public class MouseHandler {
                 Rectangle2D hitBox = new Rectangle2D(
                         ship.worldX + ship.solidOffsetX,
                         ship.worldY + ship.solidOffsetY,
-                        ship.solidArea.width,
-                        ship.solidArea.height
+                        ship.solidArea.getWidth(),
+                        ship.solidArea.getHeight()
                 );
 
                 if (hitBox.contains(x, y) && ship.clickable) {
@@ -146,9 +146,9 @@ public class MouseHandler {
 
                 star.selected = true;
                 selectedStar = star;
-                gp.ui.setStar(star);
+                gp.ui.updateStarPanel(star);
                 gp.ui.starIsSelected = true;
-                gp.ui.selectedMessageOn = true;
+//                gp.ui.selectedMessageOn = true;
 
                 if (clickCount == 2) { // double-click
                     deselectShips();
@@ -180,7 +180,7 @@ public class MouseHandler {
                     deselectShips();
                     star.selected = false;
                     selectedStar = null;
-                    gp.ui.selectedMessageOn = false;
+//                    gp.ui.selectedMessageOn = false;
                     return true;
                 }
 
@@ -226,7 +226,7 @@ public class MouseHandler {
         selectedStar = null;
         gp.ui.star = null;
         gp.ui.starIsSelected = false;
-        gp.ui.selectedMessageOn = false;
+//        gp.ui.selectedMessageOn = false;
     }
 
     public boolean canAfford(String eName) {

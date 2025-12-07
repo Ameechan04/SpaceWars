@@ -33,7 +33,7 @@ public class SmallSatellite extends StationaryEntity {
 
 
         //x and y do not matter as overridden when drawn
-        this.solidArea = new Rectangle(-10, -10 , 10,10);
+        this.solidArea = new javafx.scene.shape.Rectangle(-10, -10 , 10,10);
         solidAreaDefaultX = worldX; //where the ship's actual position is
         solidAreaDefaultY = worldY;
         this.solidOffsetX = 20;
@@ -51,11 +51,9 @@ public class SmallSatellite extends StationaryEntity {
     public void getImage() {
 
         try {
-            left1 = new javafx.scene.image.Image(getClass().getResourceAsStream("/units/ColonyShipLeft.png"));
-            right1 = new Image(getClass().getResourceAsStream("/units/ColonyShipRight.png"));
-            left1 = ImageIO.read(getClass().getResourceAsStream("/units/SmallSatellite.png"));
-            right1 = ImageIO.read(getClass().getResourceAsStream("/units/SmallSatellite.png"));
-        }catch (IOException e){
+            left1 = new javafx.scene.image.Image(getClass().getResourceAsStream("/units/SmallSatellite.png"));
+            right1 = new Image(getClass().getResourceAsStream("/units/SmallSatellite.png"));
+        }catch (Exception e){
             e.printStackTrace();
         }
     }

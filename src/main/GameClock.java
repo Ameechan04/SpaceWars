@@ -6,15 +6,44 @@ public class GameClock {
     private int lastProcessedMonth = -1;
 
     private double dayCounter = 0;
+    StarMap starMap;
     private double elapsedGameDaysThisFrame = 0;
     private double totalGameDays = 0;
     public int gameSpeed = 1; //speed is 1 on default
 
 
+    // In GamePanel.update()
+    public void updateTime(double elapsedRealSeconds) {
+        dayCounter += elapsedRealSeconds * 0.5 * gameSpeed; //1 in-game days per real second
+
+        if (dayCounter >= 1.0) {
+            int daysToAdvance = (int) dayCounter;
+            for (int i = 0; i < daysToAdvance; i++) {
+                advanceOneDay(); // update game state per day
+            }
+            dayCounter -= daysToAdvance;
+        }
+    }
+
     public void setGameSpeed(int gameSpeed) {
         this.gameSpeed = gameSpeed;
     }
 
+    public void advanceOneDay() {
+        day++;
+        totalGameDays++;
+        if (day > 30) {
+            day = 1;
+            month++;
+            if (month > 12) {
+                month = 1;
+                year++;
+            }
+        }
+
+//        starMap.updateDay(getCurrentDayCount()); // call daily updates
+        // TODO: Add construction updates, income, etc.
+    }
 
     public int getCurrentDayCount() {
         return year * 360 + month * 30 + day;

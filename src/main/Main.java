@@ -1,17 +1,15 @@
 package main;
 
 import javafx.application.Application;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.geometry.Rectangle2D;
 
 public class Main extends Application {
 
     private GamePanel gamePanel;
-    private final int WIDTH = 1200;
-    private final int HEIGHT = 800;
 
     @Override
     public void start(Stage primaryStage) {
@@ -20,26 +18,31 @@ public class Main extends Application {
         // Root pane
         Pane root = new Pane();
 
-        // Initialize game logic
-        gamePanel = new GamePanel();
+        // Get screen dimensions
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        double screenWidth = screenBounds.getWidth();
+        double screenHeight = screenBounds.getHeight();
+
+        // Create the Scene first
+        Scene scene = new Scene(root, screenWidth, screenHeight);
+
+        // Now, initialize GamePanel with the required arguments
+        gamePanel = new GamePanel(screenWidth, screenHeight, scene, root);
         gamePanel.setUpGame();
 
-        // Add the GamePanel node to the JavaFX scene
+        // Add the GamePanel node to the root pane
         root.getChildren().add(gamePanel);
 
-        // Set up full-screen using screen bounds
-        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        // Set up the stage
+        primaryStage.setScene(scene);
         primaryStage.setX(screenBounds.getMinX());
         primaryStage.setY(screenBounds.getMinY());
-        primaryStage.setWidth(screenBounds.getWidth());
-        primaryStage.setHeight(screenBounds.getHeight());
-
-        Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight());
-        primaryStage.setScene(scene);
-        primaryStage.setFullScreen(true); // optional
+        primaryStage.setWidth(screenWidth);
+        primaryStage.setHeight(screenHeight);
+        primaryStage.setFullScreen(true);
         primaryStage.show();
 
-        // Start the existing game loop inside GamePanel
+        // Start the game loop
         gamePanel.startGameThread();
     }
 

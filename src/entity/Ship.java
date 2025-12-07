@@ -1,5 +1,6 @@
 package entity;
 
+import javafx.geometry.Point2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
@@ -22,13 +23,11 @@ public class Ship extends Entity {
     // Orbit offset defaults
     public final int defaultOrbitOffsetX;
     public final int defaultOrbitOffsetY;
-    public int orbitStackIndex = 0; // New: track position in stack
+    public int orbitStackIndex = 0;
 
     // Movement rendering
     public Star startingStarForLeg;
-    private final List<Point> renderPath = new ArrayList<>();
-    private static final BasicStroke DASHED_STROKE =
-            new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{5, 5}, 0);
+    private final List<Point2D> renderPath = new ArrayList<>();
 
     public Ship(GamePanel gamePanel, String name, Star currentStar, double speed,
                 int defaultOrbitOffsetX, int defaultOrbitOffsetY,
@@ -48,10 +47,9 @@ public class Ship extends Entity {
             setCentrePosition(currentStar.x + orbitOffsetX, currentStar.y + orbitOffsetY);
         }
 
-        getImage(); // Load fallback image
+        getImage();
     }
 
-    /** Start moving to a destination star */
     public void startMovingToStar(Star destination) {
         if (currentStar == destination) {
             moving = false;
@@ -63,32 +61,26 @@ public class Ship extends Entity {
         Star leavingStar = currentStar;
 
         if (leavingStar != null) {
-            // Remove from orbit lists (only once)
             leavingStar.orbitingShips.remove(this);
             if (leavingStar.orbitManager != null) {
                 leavingStar.orbitManager.removeShip(this);
             }
 
-            // mark as in-transit
             this.inOrbit = false;
             this.moving = true;
             this.orbitOffsetX = defaultOrbitOffsetX;
             this.orbitOffsetY = defaultOrbitOffsetY;
-            // DO NOT set currentStar = null yet; use leavingStar for path decisions
         }
 
-        // Determine path FROM leavingStar (if present) — not currentStar which may be nulled later
         if (leavingStar != null && leavingStar.connections.contains(destination)) {
             targetStar = destination;
             prepareRenderPath(leavingStar, destination);
         } else {
             Star fromStar = (leavingStar != null) ? leavingStar : currentStar;
-            // If fromStar is still null here then we can't compute path — bail out safely
             if (fromStar == null) return;
 
             jumpPath = gamePanel.starMap.findShortestPath(fromStar, destination);
             if (jumpPath == null || jumpPath.size() < 2) {
-                // nothing to do
                 return;
             }
             jumpIndex = 1;
@@ -96,34 +88,29 @@ public class Ship extends Entity {
             prepareRenderPath(fromStar, destination);
         }
 
-        // finally clear currentStar to indicate we're in transit
         this.currentStar = null;
     }
 
-
-    /** Precompute render path */
     private void prepareRenderPath(Star start, Star end) {
         renderPath.clear();
         if (jumpPath == null || jumpPath.size() < 2) {
-            renderPath.add(new Point((int) start.x, (int) start.y));
-            renderPath.add(new Point((int) end.x, (int) end.y));
+            renderPath.add(new Point2D(start.x, start.y));
+            renderPath.add(new Point2D(end.x, end.y));
             return;
         }
 
         Star from = startingStarForLeg != null ? startingStarForLeg : start;
         for (int i = jumpIndex; i < jumpPath.size(); i++) {
             Star to = jumpPath.get(i);
-            renderPath.add(new Point((int) from.x, (int) from.y));
-            renderPath.add(new Point((int) to.x, (int) to.y));
+            renderPath.add(new Point2D(from.x, from.y));
+            renderPath.add(new Point2D(to.x, to.y));
             from = to;
         }
     }
 
-    /** Update ship movement and orbit */
     public void update(double currentGameDay) {
         if (!moving && !enteringOrbit) return;
 
-        // Arrive at target star
         if (arrivedAtStarCentre) {
             arrivedAtStarCentre = false;
             currentStar = targetStar;
@@ -164,7 +151,6 @@ public class Ship extends Entity {
         }
     }
 
-    /** Move towards a position */
     private boolean moveTowards(double tx, double ty) {
         double dx = tx - exactCentreX;
         double dy = ty - exactCentreY;
@@ -182,7 +168,6 @@ public class Ship extends Entity {
         return false;
     }
 
-    /** Move ship into orbit around current star */
     private void moveToOrbit() {
         if (currentStar == null) return;
 
@@ -201,7 +186,6 @@ public class Ship extends Entity {
         }
     }
 
-    /** Enter orbit immediately (used for initial placement) */
     public void enterOrbit(Star star) {
         this.currentStar = star;
         this.inOrbit = true;
@@ -213,22 +197,19 @@ public class Ship extends Entity {
                 star.orbitManager.getTargetY(this));
     }
 
-    /** Efficiently draw ship */
     @Override
     public void draw(GraphicsContext gc) {
         Image image = facingLeft ? left1 : right1;
 
-        int imgX = (int) Math.round(exactCentreX - (solidArea.getWidth() / 2.0));
-        int imgY = (int) Math.round(exactCentreY - (solidArea.getHeight() / 2.0));
+        double imgX = exactCentreX - (solidArea.getWidth() / 2.0);
+        double imgY = exactCentreY - (solidArea.getHeight() / 2.0);
 
-        // Draw image if available
         if (image != null) {
             gc.drawImage(image, imgX, imgY, solidArea.getWidth(), solidArea.getHeight());
         } else {
-            // fallback visible representation (filled rectangle)
-            if (faction == null) gc.setStroke(Color.GRAY);
-            else if (faction == Faction.PLAYER) gc.setStroke(Color.GREEN);
-            else gc.setStroke(Color.RED);
+            if (faction == null) gc.setFill(Color.GRAY);
+            else if (faction == Faction.PLAYER) gc.setFill(Color.GREEN);
+            else gc.setFill(Color.RED);
 
             gc.fillRect(solidArea.getX(), solidArea.getY(), solidArea.getWidth(), solidArea.getHeight());
         }
@@ -240,12 +221,11 @@ public class Ship extends Entity {
         gc.strokeRect(solidArea.getX(), solidArea.getY(), solidArea.getWidth(), solidArea.getHeight());
 
         if (selected) {
-            gc.setColor(Color.BLUE);
-            g2.drawRect(solidArea.x, solidArea.y, solidArea.width, solidArea.height);
+            gc.setStroke(Color.BLUE);
+            gc.strokeRect(solidArea.getX(), solidArea.getY(), solidArea.getWidth(), solidArea.getHeight());
         }
     }
 
-    /** Setup solid area */
     public void setupSolidArea(int width, int height) {
         this.solidArea.setWidth(width);
         this.solidArea.setHeight(height);
